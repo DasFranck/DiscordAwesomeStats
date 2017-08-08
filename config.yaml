@@ -1,0 +1,35 @@
+# Configuration file for DiscordAwesomeStats
+
+## Servers list
+# If channels aren't specified the getting and stats will be done on every channel the bot has access to.
+# Server name and server id are required.
+# Silent means no summary writed on the server
+# Report is the list of channels where the bot is supposed to write a summary message
+#   Only the ID is needed, but it must match a channel which has been used by the bot.
+# If the report_all has been set to True, it will write a summary message in every channels
+
+
+servers:
+  - name: Dummy server
+    id: 564564654654546755
+    channels:
+      - name: Discussion
+        id: 6546545656564564546
+    report:
+      - 6546545656564564546
+
+  - name: Sampleserver
+    id: 212131232132132312
+    report_all: True
+    silent: True
+
+  - name: Another sammple server
+    id: 213231123231213123
+    silent: True
+
+
+# Required for html output
+outputdir: /tmp/DiscordAwesomeStats/
+
+# Required for message getter
+token: THISISNOTAREALTOKEN

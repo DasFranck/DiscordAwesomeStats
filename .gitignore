@@ -99,3 +99,11 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Custom config files
+myconfig*.yaml
+
+# Data and logs directories
+chat_logs/
+plots/
+logs/

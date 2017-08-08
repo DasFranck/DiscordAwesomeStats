@@ -6,8 +6,10 @@ To be writed
 
 ## Todo
 ##### Top priorities
-- Use html template (jinja) instead of having html code everywhere in the script.
+- Use html template (jinja) instead of having html code everywhere in the script
 - Refactor the code
+- Stock messages in a DB, not in plain files
+- Get only last messages, not everything at every run
 
 ##### Just things which have to be done
 - Add moar plots

@@ -105,5 +105,6 @@ myconfig*.yaml
 
 # Data and logs directories
 chat_logs/
+data/
 plots/
 logs/

@@ -9,7 +9,7 @@ import os
 import yaml
 from yattag import Doc, indent
 
-from get_server_messages import MessageGetter
+from LogGetter import LogGetter
 from plotify import Plotify
 from classes import Logger
 
@@ -98,69 +98,6 @@ class DiscordAwesomeStats(discord.Client):
         return
 
 
-def the_task(token, args):
-    with open(args.config_file, 'r') as file:
-        config = yaml.load(file)
-    print("HEY")
-    if not args.no_getlog:
-        mg = MessageGetter(config)
-        mg.run(token)
-        summary = mg.summary
-        with open("chat_logs/summary.txt", 'w') as summary_file:
-            json.dump(summary, summary_file, indent=4)
-
-    if not args.no_plotify:
-        summaries_to_be_writed = []
-        with open("chat_logs/summary.txt", 'r') as summary_file:
-            summary_json = json.load(summary_file)
-            server_channel_dict = {}
-            for channel in summary_json:
-                print("Doing plots for %s #%s" % (channel["Server name"], channel["Channel name"]))
-                try:
-                    plotify = Plotify(config["outputdir"], channel)
-                except Plotify.EmptyChannelException:
-                    print("Skipping it cause it's empty")
-                else:
-                    plotify.plotify()
-                    plotify.write_standing_history_html()
-                    plotify.write_all_plots_html()
-                    plotify.write_channel_main_html()
-                    for server_config in config["servers"]:
-                        print(server_config)
-                        print(channel)
-                        if str(server_config["id"]) == str(channel["Server ID"]):
-                            serv_conf = server_config
-                            break
-                    else:
-                        serv_conf = None
-
-                    if not (args.silent or ("silent" in serv_conf and serv_conf["silent"])) \
-                       and (("report_all" in serv_conf and serv_conf["report_all"]) or ("report" in serv_conf and channel["Channel ID"] in str(serv_conf["report"]))) \
-                       and hasattr(plotify, "top10yesterday"):
-                        text = "DiscoLog Awesome Stats has been updated.\n\nMessage amount 'til now: **%d**\nStandings of yesterday:\n```\n" % channel["Length"]
-                        text += plotify.top10yesterday
-                        text += "```\n\nMore stats and graphs here : https://dasfranck.fr/DiscordAwesomeStats/%s/%s/" % (channel["Server ID"], channel["Channel ID"])
-                        summaries_to_be_writed.append((channel["Server ID"], channel["Channel ID"], text))
-                if (channel["Server ID"] not in server_channel_dict):
-                    server_channel_dict[channel["Server ID"]] = {
-                        "Server name": channel["Server name"],
-                        "Channels": [{
-                            "Channel name": channel["Channel name"],
-                            "Channel ID": channel["Channel ID"]
-                        }]}
-                else:
-                    server_channel_dict[channel["Server ID"]]["Channels"].append({
-                        "Channel name": channel["Channel name"],
-                        "Channel ID": channel["Channel ID"]
-                    })
-            write_indexes_html(server_channel_dict, config["outputdir"])
-
-        print("YAY")
-        sw = SummaryWriter(config, summaries_to_be_writed)
-        sw.run(token)
-    return
-
-
 class SummaryWriter(discord.Client):
     def __init__(self, config, summaries):
         super().__init__()
@@ -191,9 +128,60 @@ def main():
     parser.add_argument("--silent", action='store_true', default=False)
     args = parser.parse_args()
 
-    with open(args.config_file) as config_file:
-        token = yaml.load(config_file)["token"]
-    the_task(token, args)
+    with open(args.config_file, 'r') as file:
+        config = yaml.load(file)
+
+    lg = LogGetter(config)
+    lg.run(config["token"])
+    with open("chat_logs/summary.txt", 'w') as summary_file:
+        json.dump(lg.summary, summary_file, indent=4)
+
+    return
+    summaries_to_be_writed = []
+    server_channel_dict = {}
+    for channel in lg.summary:
+        print("Doing plots for %s #%s" % (channel["Server name"], channel["Channel name"]))
+        try:
+            plotify = Plotify(config["outputdir"], channel)
+        except Plotify.EmptyChannelException:
+            print("Skipping it cause it's empty")
+        else:
+            plotify.plotify()
+            plotify.write_standing_history_html()
+            plotify.write_all_plots_html()
+            plotify.write_channel_main_html()
+            for server_config in config["servers"]:
+                print(server_config)
+                print(channel)
+                if str(server_config["id"]) == str(channel["Server ID"]):
+                    serv_conf = server_config
+                    break
+            else:
+                serv_conf = None
+
+            if not (args.silent or ("silent" in serv_conf and serv_conf["silent"])) \
+               and (("report_all" in serv_conf and serv_conf["report_all"]) or ("report" in serv_conf and channel["Channel ID"] in str(serv_conf["report"]))) \
+               and hasattr(plotify, "top10yesterday"):
+                text = "DiscoLog Awesome Stats has been updated.\n\nMessage amount 'til now: **%d**\nStandings of yesterday:\n```\n" % channel["Length"]
+                text += plotify.top10yesterday
+                text += "```\n\nMore stats and graphs here : https://dasfranck.fr/DiscordAwesomeStats/%s/%s/" % (channel["Server ID"], channel["Channel ID"])
+                summaries_to_be_writed.append((channel["Server ID"], channel["Channel ID"], text))
+        if (channel["Server ID"] not in server_channel_dict):
+            server_channel_dict[channel["Server ID"]] = {
+                "Server name": channel["Server name"],
+                "Channels": [{
+                    "Channel name": channel["Channel name"],
+                    "Channel ID": channel["Channel ID"]
+                }]}
+        else:
+            server_channel_dict[channel["Server ID"]]["Channels"].append({
+                "Channel name": channel["Channel name"],
+                "Channel ID": channel["Channel ID"]
+            })
+    write_indexes_html(server_channel_dict, config["outputdir"])
+
+    sw = SummaryWriter(config, summaries_to_be_writed)
+    sw.run(config["token"])
 
 
 if __name__ == '__main__':

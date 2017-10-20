@@ -22,20 +22,6 @@ class LogGetter(discord.Client):
             os.makedirs("data")
         self.db = sqlite3.connect('data/database.db')
 
-    def run(self, *args, **kwargs):
-        try:
-            self.loop.run_until_complete(self.start(*args, **kwargs))
-        except KeyboardInterrupt:
-            self.loop.run_until_complete(self.logout())
-            pending = asyncio.Task.all_tasks()
-            gathered = asyncio.gather(*pending)
-            try:
-                gathered.cancel()
-                self.loop.run_until_complete(gathered)
-                gathered.exception()
-            except:
-                pass
-
     async def on_ready(self):
         await self.get_server_messages()
         await self.logout()
@@ -153,8 +139,21 @@ class LogGetter(discord.Client):
                             except discord.errors.Forbidden:
                                 pass
                     print()
-
         print("Done.")
         self.logger.logger.info("Done.")
         self.logger.logger.info("#--------------END--------------#")
         return self.summary
+
+    def run(self, *args, **kwargs):
+        try:
+            self.loop.run_until_complete(self.start(*args, **kwargs))
+        except KeyboardInterrupt:
+            self.loop.run_until_complete(self.logout())
+            pending = asyncio.Task.all_tasks()
+            gathered = asyncio.gather(*pending)
+            try:
+                gathered.cancel()
+                self.loop.run_until_complete(gathered)
+                gathered.exception()
+            except:
+                pass

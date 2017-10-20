@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import asyncio
 import discord
 import json
 import os
 import yaml
+
+from plotify import Plotify
 from yattag import Doc, indent
 
 from LogGetter import LogGetter
-from plotify import Plotify
 from classes import Logger
 
 
@@ -133,10 +133,9 @@ def main():
 
     lg = LogGetter(config)
     lg.run(config["token"])
-    with open("chat_logs/summary.txt", 'w') as summary_file:
+    with open("data/summary.json", 'w') as summary_file:
         json.dump(lg.summary, summary_file, indent=4)
 
-    return
     summaries_to_be_writed = []
     server_channel_dict = {}
     for channel in lg.summary:
@@ -144,10 +143,10 @@ def main():
         try:
             plotify = Plotify(config["outputdir"], channel)
         except Plotify.EmptyChannelException:
-            print("Skipping it cause it's empty")
+            print("Skipping it cause it's empty.")
         else:
             plotify.plotify()
-            plotify.write_standing_history_html()
+#            plotify.write_standing_history_html()
             plotify.write_all_plots_html()
             plotify.write_channel_main_html()
             for server_config in config["servers"]:

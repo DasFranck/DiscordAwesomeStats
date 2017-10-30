@@ -244,8 +244,7 @@ class Plotify():
 
         yesterday = datetime.combine(date.today() - timedelta(days=1), datetime.min.time())
         day_begin = yesterday + pytz.timezone(timezone).localize(yesterday).utcoffset()
-        day_end = yesterday + pytz.timezone(timezone).localize(yesterday + timedelta(days=1)).utcoffset() + 
-        timedelta(days=1)
+        day_end = yesterday + pytz.timezone(timezone).localize(yesterday + timedelta(days=1)).utcoffset() + timedelta(days=1)
 
         cursor.execute("SELECT author_id FROM 'log_{}-{}' WHERE time >= ? AND time < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
                        (int(day_begin.timestamp()), int(day_end.timestamp())))

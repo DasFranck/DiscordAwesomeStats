@@ -18,17 +18,18 @@ class LogGetter(discord.Client):
         super().__init__()
         self.logger = Logger.Logger()
         self.config = config
-        if not (os.path.exists("data")):
+        if not os.path.exists("data"):
             os.makedirs("data")
-        self.db = sqlite3.connect('data/database.db')
+        self.database = sqlite3.connect('data/database.db')
 
     async def on_ready(self):
         await self.get_server_messages()
         await self.logout()
 
     async def get_members_from_server(self, server):
-        cursor = self.db.cursor()
-        cursor.execute("""
+        cursor = self.database.cursor()
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS 'members_%s'(
                 id INTEGER PRIMARY KEY ON CONFLICT REPLACE UNIQUE,
                 name VALUE,
@@ -47,26 +48,32 @@ class LogGetter(discord.Client):
                 member.discriminator
             ))
 
-        cursor.executemany("""
+        cursor.executemany(
+            """
             INSERT INTO 'members_%s'(
                 id, name, nick, discriminator
             )
             VALUES(?, ?, ?, ?)
-            """ % server.id, members)
-        self.db.commit()
+            """ % server.id,
+            members
+        )
+
+        self.database.commit()
 
     async def get_logs_from_channel(self, channel, cfg):
         print("\t{} ({})".format(channel.name, channel.id))
 
-        cursor = self.db.cursor()
-        cursor.execute("""
+        cursor = self.database.cursor()
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS 'log_%s-%s'(
                 id INTEGER PRIMARY KEY ON CONFLICT REPLACE UNIQUE,
                 author_id INT,
                 time INTEGER,
                 content VALUE
             )
-            """ % (str(cfg["id"]), channel.id))
+            """ % (str(cfg["id"]), channel.id)
+        )
 
         try:
             cursor.execute("select MAX(time) from 'log_%s-%s';" % (str(cfg["id"]), channel.id))
@@ -84,16 +91,19 @@ class LogGetter(discord.Client):
                 int(time.mktime(item.timestamp.timetuple())),
                 item.content
             ))
-            if (len(log_buffer) % 1000 == 0):
+            if len(log_buffer) % 1000 == 0:
                 print("\t\t%d" % len(log_buffer))
 
-        cursor.executemany("""
+        cursor.executemany(
+            """
             INSERT INTO 'log_%s-%s'(
                 id, author_id, time, content
             )
             VALUES(?, ?, ?, ?)
-            """ % (str(cfg["id"]), channel.id), log_buffer)
-        self.db.commit()
+            """ % (str(cfg["id"]), channel.id),
+            log_buffer
+        )
+        self.database.commit()
 
         cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
         msg_count = cursor.fetchone()[0]

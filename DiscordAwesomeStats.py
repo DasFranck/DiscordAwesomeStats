@@ -7,75 +7,26 @@ import json
 import os
 import yaml
 
+from jinja2 import Environment, FileSystemLoader
 from plotify import Plotify
-from yattag import Doc, indent
 
 from LogGetter import LogGetter
 from classes import Logger
 
 
 def write_indexes_html(server_channel_dict, output_path):
+    env = Environment(
+        loader=FileSystemLoader('./templates')
+    )
+    template_index = env.get_template('index.html.j2')
+    template_server_page = env.get_template('server_page.html.j2')
+
     for id_server, server in server_channel_dict.items():
-        doc, tag, text = Doc().tagtext()
-
-        with tag('html'):
-            # HEAD
-            with tag('head'):
-                doc.asis("<!DOCTYPE html>")
-                doc.asis("<meta charset=\"UTF-8\">")
-                doc.asis("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">")
-                doc.asis("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">")
-                doc.asis("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css\" integrity=\"sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi\" crossorigin=\"anonymous\">")
-                doc.asis("<link rel=\"stylesheet\" href=\"../css/own.css\">")
-                with tag('title'):
-                    text("Channel index for %s" % (server["Server name"]))
-            with tag('body'):
-                with tag('h1', klass="page-header"):
-                    with tag('b'):
-                        text("Channel index for %s" % (server["Server name"]))
-                with tag("div", klass="container"):
-                    with tag('h2'):
-                        text("Channel List:")
-                    with tag("ul", ("style", "list-style-type:none")):
-                        for channel in server["Channels"]:
-                            with tag("li"):
-                                with tag('h4'):
-                                    with tag('a', href=str(channel["Channel ID"])):
-                                        text("#" + str(channel["Channel name"]))
-
-        result = indent(doc.getvalue())
         with open(output_path + str(id_server) + "/index.html", "w") as file:
-            file.write(result)
+            file.write(template_server_page.render(server=server))
 
-    doc, tag, text = Doc().tagtext()
-    with tag('html'):
-        # HEAD
-        with tag('head'):
-            doc.asis("<!DOCTYPE html>")
-            doc.asis("<meta charset=\"UTF-8\">")
-            doc.asis("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">")
-            doc.asis("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">")
-            doc.asis("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css\" integrity=\"sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi\" crossorigin=\"anonymous\">")
-            doc.asis("<link rel=\"stylesheet\" href=\"css/own.css\">")
-            with tag('title'):
-                text("DiscoLog Monitoring Index")
-        with tag('body'):
-            with tag('h1', klass="page-header"):
-                with tag('b'):
-                    text("DiscoLog Monitoring Index")
-            with tag("div", klass="container"):
-                with tag('h2'):
-                    text("Server List:")
-                with tag("ul", ("style", "list-style-type:none")):
-                    for id_server, server in server_channel_dict.items():
-                        with tag("li"):
-                            with tag('h4'):
-                                with tag('a', href=str(id_server)):
-                                    text(server["Server name"])
-    print(doc.getvalue())
-    result = indent(doc.getvalue())
     with open(output_path + "index.html", "w") as file:
-        file.write(result)
+        file.write(template_index.render(server_channel_dict=server_channel_dict))
     return
 
 

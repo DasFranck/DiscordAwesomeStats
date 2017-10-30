@@ -13,7 +13,7 @@ import pytz
 
 import plotly
 import plotly.graph_objs as go
-from yattag import Doc, indent
+from jinja2 import Environment, FileSystemLoader
 
 # Now use a sqlite database instead of plain text
 # Optimizations
@@ -106,75 +106,13 @@ class Plotify():
 #        self.stats["top10perday"] = (self.top10_per_day("Stats-top10perday.html"), "Stats-top10perday.html", "Standings history")
 
     def write_channel_main_html(self):
-        doc, tag, text = Doc().tagtext()
+        env = Environment(
+            loader=FileSystemLoader('./templates')
+        )
+        template_channel_page = env.get_template('channel_page.html.j2')
 
-        with tag('html'):
-            # HEAD
-            with tag('head'):
-                doc.asis("<!DOCTYPE html>")
-                doc.asis("<meta charset=\"UTF-8\">")
-                doc.asis("<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">")
-                doc.asis("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">")
-                doc.asis("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css\" integrity=\"sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi\" crossorigin=\"anonymous\">")
-                doc.asis("<link rel=\"stylesheet\" href=\"../../css/own.css\">")
-                with tag('title'):
-                    text("DiscoLog Monitoring for %s (#%s)" % (self.summary["Server name"], self.summary["Channel name"]))
-            # BODY
-            with tag('body'):
-                with tag('h1', klass="page-header"):
-                    text("DiscoLog Monitoring for %s (#%s)" % (self.summary["Server name"], self.summary["Channel name"]))
-                with tag("div", klass="container"):
-                    # Standing of yesterday
-                    with tag('h3', klass="sub-header"):
-                        text("Standings of yesterday")
-                    with tag("table", klass="table table-sm"):
-                        with tag("thead"):
-                            with tag("tr"):
-                                with tag("th"):
-                                    text("#")
-                                with tag("th"):
-                                    text("Messages count")
-                                with tag("th"):
-                                    text("Nickname")
-                        with tag("tbody"):
-                            for (i, elem) in enumerate(self.top10_yesterday()):
-                                with tag("tr"):
-                                    with tag("td"):
-                                        text(str(i + 1))
-                                    with tag("td"):
-                                        text(elem[0])
-                                    with tag("td"):
-                                        text(elem[1])
-                    # Graphs
-                    with tag('h3'):
-                        text("Graphs")
-                    with tag("ul", ("style", "list-style-type:none")):
-                        with tag("li"):
-                            with tag('a', href="allplots.html"):
-                                doc.asis("All graphs")
-                        for _, plot in self.plots.items():
-                            if plot[1] and plot[2]:
-                                with tag("li"):
-                                    with tag('a', href=plot[1]):
-                                        text(plot[2])
-                    # Stats
-                    with tag('h3'):
-                        text("Stats")
-#                     with tag("ul", ("style", "list-style-type:none")):
-                        # for _, stat in self.stats.items():
-                            # if stat[1] and stat[2]:
-                                # with tag("li"):
-                                    # with tag('a', href=stat[1]):
-#                                         text(stat[2])
-                    # Footer
-                    with tag("footer", klass="footer"):
-                        with tag("div", klass="container"):
-                            with tag("span", klass="text-muted"):
-                                text("Page generated at %s by DiscoLog (DasFranck#1168)" % datetime.now().strftime("%T the %F"))
-
-        result = indent(doc.getvalue())
         with open(self.plots_dir + "index.html", "w") as file:
-            file.write(result)
+            file.write(template_channel_page.render(html_render_date_string=datetime.now().strftime("%T the %F")))
 
     def write_all_plots_html(self):
         doc, tag, text = Doc().tagtext()
@@ -193,20 +131,13 @@ class Plotify():
             file.write(result)
 
     def write_standing_history_html(self):
-        doc, tag, text = Doc().tagtext()
+        env = Environment(
+            loader=FileSystemLoader('./templates')
+        )
+        template_standing_history = env.get_template('standing_history.html.j2')
 
-        with tag('html'):
-            with tag('head'):
-                doc.asis('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
-            with tag('body'):
-                doc.asis(self.stats["top10perday"][0])
-                doc.asis("<br />")
-                doc.asis("<br />")
-                text("Page generated at %s" % datetime.now().strftime("%T the %F"))
-
-        result = doc.getvalue()
         with open(self.plots_dir + "standinghistory.html", "w") as file:
-            file.write(result)
+            file.write(template_standing_history.render(html_render_date_string=datetime.now().strftime("%T the %F")))
 
     def write_raw_text_in_html(self, content, path):
         doc, tag, text = Doc().tagtext()

@@ -24,28 +24,43 @@ from jinja2 import Environment, FileSystemLoader
 
 # UTILS
 def generate_plot(graph_dict, file_path):
+    """
+    Generate a plot from 'graph_dict', save it with plotlyjs
+    embedded into 'file_path' and return it as a div without plotlyjs embedded.
+    """
     try:
-        plotly.offline.plot(graph_dict, filename=file_path, show_link=False, auto_open=False)
-        return (plotly.offline.plot(graph_dict, filename=file_path, show_link=False, auto_open=False, output_type="div"))
+        plotly.offline.plot(
+            graph_dict,
+            filename=file_path, show_link=False, auto_open=False
+            )
+        return plotly.offline.plot(
+            graph_dict,
+            filename=file_path, show_link=False, auto_open=False,
+            output_type="div", include_plotlyjs=False
+            )
     except:
         return ""
 
 
 def cumultative_sum(values, start=0):
-    for v in values:
-        start += v
+    for value in values:
+        start += value
         yield start
 
 
 class Plotify():
     class EmptyChannelException(Exception):
+        """ EmptyChannelException """
         pass
 
     def __init__(self, output_path, summary_dict):
         self.summary = summary_dict
-        self.plots_dir = "{}/{}/{}/".format(output_path, self.summary["Server ID"], self.summary["Channel ID"])
+        self.plots_dir = "{}/{}/{}/".format(
+            output_path, self.summary["Server ID"], self.summary["Channel ID"]
+            )
+        self.plots = None
 
-        if not (os.path.exists("data")):
+        if not os.path.exists("data"):
             os.makedirs("data")
         self.db = sqlite3.connect('data/database.db')
 
@@ -58,8 +73,9 @@ class Plotify():
         self.get_date_array()
         self.counts = [self.get_count_per_date(date) for date in self.date_array]
         self.cumul = list(cumultative_sum(self.counts))
-        if not (os.path.exists(self.plots_dir)):
+        if not os.path.exists(self.plots_dir):
             os.makedirs(self.plots_dir)
+
 
     def get_date_array(self):
         cursor = self.db.cursor()
@@ -75,13 +91,13 @@ class Plotify():
 
     # TODO: Timezone support (other than just UTC)
     # date can be str or datetime.datetime
-    def get_count_per_date(self, date, user=None, timezone='Europe/Paris'):
+    def get_count_per_date(self, target_date, user=None, timezone='Europe/Paris'):
         cursor = self.db.cursor()
 
         if isinstance(date, str):
             date_time = datetime.strptime(date, "%Y-%m-%d")
         else:
-            date_time = date
+            date_time = target_date
 
         day_begin = date_time + pytz.timezone(timezone).localize(date_time).utcoffset()
         day_end = date_time + pytz.timezone(timezone).localize(date_time + timedelta(days=1)).utcoffset() + timedelta(days=1)
@@ -115,20 +131,13 @@ class Plotify():
             file.write(template_channel_page.render(html_render_date_string=datetime.now().strftime("%T the %F")))
 
     def write_all_plots_html(self):
-        doc, tag, text = Doc().tagtext()
+        env = Environment(
+            loader=FileSystemLoader('./templates')
+        )
+        template = env.get_template('all_plots.html.j2')
 
-        with tag('html'):
-            with tag('head'):
-                doc.asis('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
-            with tag('body'):
-                for _, plot in self.plots.items():
-                    doc.asis(plot[0])
-                doc.asis("<br />")
-                text("Page generated at %s" % datetime.now().strftime("%T the %F"))
-
-        result = doc.getvalue()
         with open(self.plots_dir + "allplots.html", "w") as file:
-            file.write(result)
+            file.write(template.render(plots=self.plots.items()))
 
     def write_standing_history_html(self):
         env = Environment(
@@ -205,13 +214,13 @@ class Plotify():
     def top10_per_day(self, path):
         # user_list = sort(list(set(([b for a,b in meta_list]))))
         text = "<pre>"
-        meta_list = [(meta[0].split(" ")[0], meta[1]) for meta in self.meta_list]
+        meta_list = [(meta[0].split(" ")[0], meta[1]) for meta in meta_list]
         meta_sorted = sorted(meta_list, key=operator.itemgetter(0))
         meta_grouped = [list(group) for key, group in itertools.groupby(meta_sorted, operator.itemgetter(0))]
         for meta_per_date in reversed(meta_grouped[:-1]):
             count_map = {}
-            for t in meta_per_date:
-                count_map[t[1]] = count_map.get(t[1], 0) + 1
+            for meta in meta_per_date:
+                count_map[meta[1]] = count_map.get(meta[1], 0) + 1
             top_list = sorted(count_map.items(), key=operator.itemgetter(1), reverse=True)[0:10]
 
             text += "<b>" + meta_per_date[0][0] + "</b><br />"
@@ -235,7 +244,8 @@ class Plotify():
 
         yesterday = datetime.combine(date.today() - timedelta(days=1), datetime.min.time())
         day_begin = yesterday + pytz.timezone(timezone).localize(yesterday).utcoffset()
-        day_end = yesterday + pytz.timezone(timezone).localize(yesterday + timedelta(days=1)).utcoffset() + timedelta(days=1)
+        day_end = yesterday + pytz.timezone(timezone).localize(yesterday + timedelta(days=1)).utcoffset() + 
+        timedelta(days=1)
 
         cursor.execute("SELECT author_id FROM 'log_{}-{}' WHERE time >= ? AND time < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
                        (int(day_begin.timestamp()), int(day_end.timestamp())))
@@ -258,8 +268,11 @@ class Plotify():
         return (standing)
 
 
-# Is this really useful?
 def main():
+    """
+    The main. When it was still needed.
+    Will be probably removed soon beacause it's truly useless.
+    """
     # Parsearg
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("log_path")

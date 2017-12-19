@@ -143,7 +143,7 @@ class LogGetter(discord.Client):
                     for channel in server.channels:
                         if (channel.type != discord.ChannelType.voice and
                             ("channels" not in cfg or
-                             channel.id in [str(i["id"]) for i in cfg["channels"]])):
+                            channel.id in [str(i["id"]) for i in cfg["channels"]])):
                             try:
                                 await self.get_logs_from_channel(channel, cfg)
                             except discord.errors.Forbidden:

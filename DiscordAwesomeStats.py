@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import discord
 import json
 import os
 import yaml
 
+import discord
 from jinja2 import Environment, FileSystemLoader
 from plotify import Plotify
 
@@ -39,13 +39,13 @@ class DiscordAwesomeStats(discord.Client):
             self.config = yaml.load(file)
 
         if "servers" not in self.config:
-            return (1)
+            return 1
 
         if not os.path.isdir("chat_logs/"):
             os.mkdir("chat_logs")
 
     async def on_ready(self):
-        print("HEY")
+        print("Starting awesomness...")
         return
 
 
@@ -58,21 +58,16 @@ class SummaryWriter(discord.Client):
 
     async def on_ready(self):
         for summary_to_be_writed in self.summaries:
-            print(1)
             for server in self.servers:
-                print(2)
                 if server.id == summary_to_be_writed[0]:
-                    print(3)
                     for channel in server.channels:
-                        print(4)
                         if channel.id == summary_to_be_writed[1]:
-                            print(5)
                             await self.send_message(channel, summary_to_be_writed[2])
         await self.logout()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="BT-Monitor Script")
+    parser = argparse.ArgumentParser(description="DiscordAwesomeStats")
     parser.add_argument("config_file", default="./config.yaml")
     parser.add_argument("--no-getlog", action='store_true', default=False)
     parser.add_argument("--no-plotify", action='store_true', default=False)
@@ -96,10 +91,7 @@ def main():
         except Plotify.EmptyChannelException:
             print("Skipping it cause it's empty.")
         else:
-            plotify.plotify()
-#            plotify.write_standing_history_html()
-            plotify.write_all_plots_html()
-            plotify.write_channel_main_html()
+            plotify.run()
             for server_config in config["servers"]:
                 print(server_config)
                 print(channel)
@@ -111,12 +103,23 @@ def main():
 
             if not (args.silent or ("silent" in serv_conf and serv_conf["silent"])) \
                and (("report_all" in serv_conf and serv_conf["report_all"]) or ("report" in serv_conf and channel["Channel ID"] in str(serv_conf["report"]))) \
-               and hasattr(plotify, "top10yesterday"):
-                text = "DiscoLog Awesome Stats has been updated.\n\nMessage amount 'til now: **%d**\nStandings of yesterday:\n```\n" % channel["Length"]
-                text += plotify.top10yesterday
-                text += "```\n\nMore stats and graphs here : https://dasfranck.fr/DiscordAwesomeStats/%s/%s/" % (channel["Server ID"], channel["Channel ID"])
+               and hasattr(plotify, "top10_yesterday"):
+                text = """
+                DiscoLog Awesome Stats has been updated.
+                
+                Message amount 'til now: **{length}**
+                Standings of yesterday:
+                ```
+                {top10_yesterday_plain}
+                ```
+                More stats and graphs here : https://dasfranck.fr/DiscordAwesomeStats/{server_id}/{channel_id}/
+                """.format(length=channel["Length"],
+                           top10_yesterday_plain=plotify.top10_yesterday_plain,
+                           server_id=channel["Server ID"],
+                           channel_id=channel["Channel ID"]
+                          )
                 summaries_to_be_writed.append((channel["Server ID"], channel["Channel ID"], text))
-        if (channel["Server ID"] not in server_channel_dict):
+        if channel["Server ID"] not in server_channel_dict:
             server_channel_dict[channel["Server ID"]] = {
                 "Server name": channel["Server name"],
                 "Channels": [{

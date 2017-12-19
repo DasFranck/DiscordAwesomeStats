@@ -6,10 +6,10 @@ To be writed
 
 ## Todo
 ##### Top priorities
-- Use html template (jinja) instead of having html code everywhere in the script
-- Refactor the code
+- Optimize plotify (especially the usertopx)
 
 ##### Just things which have to be done
+- Rename function and variables which aren't self-explanatory
 - Add moar plots
 - Add more log messages
 

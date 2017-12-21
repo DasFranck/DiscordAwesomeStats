@@ -23,6 +23,9 @@ class LogGetter(discord.Client):
         self.database = sqlite3.connect('data/database.db')
 
     async def on_ready(self):
+        """
+        Launch the getter when the bot is ready
+        """
         await self.get_server_messages()
         await self.logout()
 
@@ -61,6 +64,9 @@ class LogGetter(discord.Client):
         self.database.commit()
 
     async def get_logs_from_channel(self, channel, cfg):
+        """
+        Get logs from channel and write it into the sqlite database (data/database.db)
+        """
         print("\t{} ({})".format(channel.name, channel.id))
 
         cursor = self.database.cursor()
@@ -108,7 +114,6 @@ class LogGetter(discord.Client):
         cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
         msg_count = cursor.fetchone()[0]
 
-        # Make the header
         header = "Server name: " + cfg["name"] + "\n"
         header += "Server ID: " + str(cfg["id"]) + "\n"
         header += "Channel name: " + channel.name + "\n"
@@ -126,8 +131,10 @@ class LogGetter(discord.Client):
 
         print("\t\t%d" % msg_count)
 
-    # Launch the getter when the bot is ready
     async def get_server_messages(self):
+        """
+        Get server messages by calling self.get_logs_from_channel on every marked chanel.
+        """
         self.summary = []
 
         print("Sucessfully connected as %s (%s)\n" % (self.user.name, self.user.id))
@@ -155,6 +162,9 @@ class LogGetter(discord.Client):
         return self.summary
 
     def run(self, *args, **kwargs):
+        """
+        Run the bot without having any asyncio problem nor timeout.
+        """
         try:
             self.loop.run_until_complete(self.start(*args, **kwargs))
         except KeyboardInterrupt:

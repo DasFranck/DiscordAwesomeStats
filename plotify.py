@@ -11,12 +11,6 @@ import plotly
 import plotly.graph_objs as go
 from jinja2 import Environment, FileSystemLoader
 
-# Now use a sqlite database instead of plain text
-# Optimizations
-# Bugfixs
-# Rectifying some hideous design choices
-# Timezone support
-
 
 # UTILS
 def cumultative_sum(values, start=0):
@@ -105,13 +99,33 @@ class Plotify():
 
         It can be limited to the message of a user if specified.
         The timezone can also be specified.
+
+        It must not be heavily used for a range of date, prefer get_count_per_date_array.
         """
         cursor = self.db.cursor()
 
         if isinstance(target_date, str):
-            date_time = datetime.strptime(target_date, "%Y-%m-%d")
+            target_date = datetime.strptime(target_date, "%Y-%m-%d")
+
+        day_begin = target_date + pytz.timezone(timezone).localize(target_date).utcoffset()
+        day_end = target_date + pytz.timezone(timezone).localize(target_date + timedelta(days=1)).utcoffset() + timedelta(days=1)
+
+        if user is None:
+            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
+                           (int(day_begin.timestamp()), int(day_end.timestamp())))
         else:
-            date_time = target_date
+            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ? AND author_id LIKE (?)".format(self.summary["Server ID"], self.summary["Channel ID"]),
+                           (int(day_begin.timestamp()), int(day_end.timestamp()), user))
+        return cursor.fetchone()[0]
+
+    def get_count_per_date_array(self, start_date, end_date, user=None, timezone='Europe/Paris'):
+        cursor = self.db.cursor()
+
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
+            
 
         day_begin = date_time + pytz.timezone(timezone).localize(date_time).utcoffset()
         day_end = date_time + pytz.timezone(timezone).localize(date_time + timedelta(days=1)).utcoffset() + timedelta(days=1)
@@ -123,6 +137,7 @@ class Plotify():
             cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ? AND author_id LIKE (?)".format(self.summary["Server ID"], self.summary["Channel ID"]),
                            (int(day_begin.timestamp()), int(day_end.timestamp()), user))
         return cursor.fetchone()[0]
+        
 
     def plotify(self):
         # Generated Content | HMTL Path | Description
@@ -187,9 +202,11 @@ class Plotify():
         for i, user_id in enumerate(top_users_ids):
             print(i + 1)
 
+            # Get daily message count for each top user 
             counts = [self.get_count_per_date(date, user=user_id) for date in self.date_array]
             cumul = list(cumultative_sum(counts))
 
+            # Get nickname of a top user if it exist
             cursor.execute("SELECT name, nick FROM members_{} WHERE id LIKE '{}';".format(self.summary["Server ID"], user_id))
             user = cursor.fetchone()
             if not user:

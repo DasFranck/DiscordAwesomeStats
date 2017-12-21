@@ -38,8 +38,7 @@ class DiscordAwesomeStats(discord.Client):
         with open(args.config_file, 'r') as file:
             self.config = yaml.load(file)
 
-        if "servers" not in self.config:
-            return 1
+        assert "servers" in self.config
 
         if not os.path.isdir("chat_logs/"):
             os.mkdir("chat_logs")

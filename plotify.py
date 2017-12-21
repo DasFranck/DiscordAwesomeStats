@@ -39,7 +39,9 @@ class Plotify():
         self.plots_dir = "{}/{}/{}/".format(
             output_path, self.summary["Server ID"], self.summary["Channel ID"]
             )
-        self.plots = None
+
+        self.plots = OrderedDict()
+        self.stats = OrderedDict()
 
         if not os.path.exists("data"):
             os.makedirs("data")
@@ -124,13 +126,11 @@ class Plotify():
 
     def plotify(self):
         # Generated Content | HMTL Path | Description
-        self.plots = OrderedDict()
         self.plots["msgperday"] = (self.plot_msgperday("Plot-msg.html"), "Plot-msg.html", "Number of messages per day")
         self.plots["msgcumul"] = (self.plot_msgcumul("Plot-msgcumul.html"), "Plot-msgcumul.html", "Number of cumulatives messages")
         #self.plots["top10"] = (self.plot_usertopx(10, "Plot-top10.html"), "Plot-top10.html", "Number of cumulatives messages for the Top 10 users")
         #self.plots["top20"] = (self.plot_usertopx(20, "Plot-top20.html"), "Plot-top20.html", "Number of cumulatives messages for the Top 20 users")
 
-#        self.stats = OrderedDict()
 #        self.stats["top10perday"] = (self.top10_per_day("Stats-top10perday.html"), "Stats-top10perday.html", "Standings history")
 
     def write_channel_main_html(self):
@@ -154,19 +154,6 @@ class Plotify():
 
         with open(self.plots_dir + "standinghistory.html", "w") as file:
             file.write(template_standing_history.render(html_render_date_string=datetime.now().strftime("%T the %F")))
-
-#    def write_raw_text_in_html(self, content, path):
-#        doc, tag, text = Doc().tagtext()
-#
-#        with tag('html'):
-#            with tag('head'):
-#                doc.asis('<meta http-equiv="content-type" content="text/html; charset=utf-8" />')
-#            with tag('body'):
-#                doc.asis(content)
-#
-#        result = doc.getvalue()
-#        with open(self.plots_dir + path, "w") as file:
-#            file.write(result)
 
     def plot_msgperday(self, path):
         msg_average = []
@@ -258,14 +245,14 @@ class Plotify():
 
         if not top:
             plain = "No message has been posted in this channel yesterday"
-            return standing
 
-        for (i, elem) in enumerate(top):
-            cursor.execute("SELECT name, nick FROM members_{} WHERE id LIKE '{}';".format(self.summary["Server ID"], elem[0]))
-            user_names = cursor.fetchone()
-            user_name = user_names[1] if user_names[1] else user_names[0]
-            standing.append((user_name, elem[1]))
-            plain += "{}.\t{}\t{}\n".format(i + 1, elem[1], user_name)
+        else:
+            for (i, elem) in enumerate(top):
+                cursor.execute("SELECT name, nick FROM members_{} WHERE id LIKE '{}';".format(self.summary["Server ID"], elem[0]))
+                user_names = cursor.fetchone()
+                user_name = user_names[1] if user_names[1] else user_names[0]
+                standing.append((user_name, elem[1]))
+                plain += "{}.\t{}\t{}\n".format(i + 1, elem[1], user_name)
         self.top10_yesterday_plain = plain
         self.top10_yesterday_tuple = standing
 

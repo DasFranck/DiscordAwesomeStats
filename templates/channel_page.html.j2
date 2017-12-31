@@ -36,9 +36,11 @@
       </table>
       <h3>Graphs</h3>
       <ul style="list-style-type:none">
-        <li>
-          <a href="allplots.html">All graphs</a>
-        </li>
+        {% for plot_name in plots %}
+          <li>
+            <a href="{{ plots[plot_name][1] }}">{{ plots[plot_name][2] }}</a>
+          </li>
+        {% endfor %}
       </ul>
     </div>
     <footer class="footer">

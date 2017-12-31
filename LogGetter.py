@@ -9,6 +9,7 @@ import sys
 import time
 
 import discord
+import pytz
 
 from classes import Logger
 
@@ -17,7 +18,11 @@ class LogGetter(discord.Client):
     def __init__(self, config):
         super().__init__()
         self.logger = Logger.Logger()
+
         self.config = config
+        if 'timezone' not in self.config:
+            self.config['timezone'] = 'UTC'
+
         if not os.path.exists("data"):
             os.makedirs("data")
         self.database = sqlite3.connect('data/database.db')
@@ -30,14 +35,18 @@ class LogGetter(discord.Client):
         await self.logout()
 
     async def get_members_from_server(self, server):
+        """
+        Get every members from the server provided and write it to the database.
+        Will create the table 'members_[server.id]' if it's not existing.
+        """
         cursor = self.database.cursor()
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS 'members_%s'(
                 id INTEGER PRIMARY KEY ON CONFLICT REPLACE UNIQUE,
-                name VALUE,
-                nick VALUE,
-                discriminator VALUE
+                name TEXT,
+                nick TEXT,
+                discriminator TEXT
             )
             """ % str(server.id)
         )
@@ -63,7 +72,7 @@ class LogGetter(discord.Client):
 
         self.database.commit()
 
-    async def get_logs_from_channel(self, channel, cfg):
+    async def get_logs_from_channel(self, channel, cfg, timezone='UTC'):
         """
         Get logs from channel and write it into the sqlite database (data/database.db)
         """
@@ -75,14 +84,15 @@ class LogGetter(discord.Client):
             CREATE TABLE IF NOT EXISTS 'log_%s-%s'(
                 id INTEGER PRIMARY KEY ON CONFLICT REPLACE UNIQUE,
                 author_id INT,
-                time INTEGER,
-                content VALUE
+                timestamp INTEGER,
+                datetime TEXT,
+                content TEXT
             )
             """ % (str(cfg["id"]), channel.id)
         )
 
         try:
-            cursor.execute("select MAX(time) from 'log_%s-%s';" % (str(cfg["id"]), channel.id))
+            cursor.execute("select MAX(timestamp) from 'log_%s-%s';" % (str(cfg["id"]), channel.id))
             last_message_timestamp = cursor.fetchone()[0]
             assert last_message_timestamp > 1431468000
             last_message_datetime = datetime.fromtimestamp(last_message_timestamp - 10)
@@ -95,6 +105,7 @@ class LogGetter(discord.Client):
                 item.id,
                 item.author.id,
                 int(time.mktime(item.timestamp.timetuple())),
+                (item.timestamp + pytz.timezone(timezone).localize(item.timestamp).utcoffset()).strftime("%F %T"),
                 item.content
             ))
             if len(log_buffer) % 1000 == 0:
@@ -103,9 +114,9 @@ class LogGetter(discord.Client):
         cursor.executemany(
             """
             INSERT INTO 'log_%s-%s'(
-                id, author_id, time, content
+                id, author_id, timestamp, datetime, content
             )
-            VALUES(?, ?, ?, ?)
+            VALUES(?, ?, ?, ?, ?)
             """ % (str(cfg["id"]), channel.id),
             log_buffer
         )
@@ -152,7 +163,7 @@ class LogGetter(discord.Client):
                             ("channels" not in cfg or
                             channel.id in [str(i["id"]) for i in cfg["channels"]])):
                             try:
-                                await self.get_logs_from_channel(channel, cfg)
+                                await self.get_logs_from_channel(channel, cfg, self.config['timezone'])
                             except discord.errors.Forbidden:
                                 pass
                     print()

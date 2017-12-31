@@ -8,7 +8,7 @@ import yaml
 
 import discord
 from jinja2 import Environment, FileSystemLoader
-from plotify import Plotify
+from Plotify import Plotify
 
 from LogGetter import LogGetter
 from classes import Logger
@@ -27,7 +27,6 @@ def write_indexes_html(server_channel_dict, output_path):
 
     with open(output_path + "index.html", "w") as file:
         file.write(template_index.render(server_channel_dict=server_channel_dict))
-    return
 
 
 class DiscordAwesomeStats(discord.Client):
@@ -45,7 +44,6 @@ class DiscordAwesomeStats(discord.Client):
 
     async def on_ready(self):
         print("Starting awesomness...")
-        return
 
 
 class SummaryWriter(discord.Client):

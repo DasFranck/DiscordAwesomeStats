@@ -33,3 +33,6 @@ outputdir: /tmp/DiscordAwesomeStats/
 
 # Required for message getter
 token: THISISNOTAREALTOKEN
+
+# If not specified, use UTC.
+timezone: 'Europe/Paris'

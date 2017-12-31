@@ -74,14 +74,18 @@ class Plotify():
                 )
 
             with open(file_path, "w") as file:
-                file.write(template_plot_page.render(plot=plot))
+                file.write(template_plot_page.render(plot=plot,
+                                                     html_render_date_string=datetime.now().strftime("%T the %F")))
             return plot
         except:
             return ""
 
     def get_date_array(self):
+        """
+        Create an array of dates as string ("%Y-%m-%d") from the day of the first message to today (not included)
+        """
         cursor = self.db.cursor()
-        cursor.execute("SELECT MIN(time) FROM 'log_{}-{}'".format(self.summary["Server ID"],
+        cursor.execute("SELECT MIN(timestamp) FROM 'log_{}-{}'".format(self.summary["Server ID"],
                                                                   self.summary["Channel ID"]))
         first_message_timestamp = cursor.fetchone()[0]
 
@@ -111,10 +115,10 @@ class Plotify():
         day_end = target_date + pytz.timezone(timezone).localize(target_date + timedelta(days=1)).utcoffset() + timedelta(days=1)
 
         if user is None:
-            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
+            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE timestamp >= ? AND timestamp < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
                            (int(day_begin.timestamp()), int(day_end.timestamp())))
         else:
-            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ? AND author_id LIKE (?)".format(self.summary["Server ID"], self.summary["Channel ID"]),
+            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE timestamp >= ? AND timestamp < ? AND author_id LIKE (?)".format(self.summary["Server ID"], self.summary["Channel ID"]),
                            (int(day_begin.timestamp()), int(day_end.timestamp()), user))
         return cursor.fetchone()[0]
 
@@ -126,15 +130,14 @@ class Plotify():
         if isinstance(end_date, str):
             end_date = datetime.strptime(end_date, "%Y-%m-%d")
             
-
         day_begin = date_time + pytz.timezone(timezone).localize(date_time).utcoffset()
         day_end = date_time + pytz.timezone(timezone).localize(date_time + timedelta(days=1)).utcoffset() + timedelta(days=1)
 
         if user is None:
-            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
+            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE timestamp >= ? AND timestamp < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
                            (int(day_begin.timestamp()), int(day_end.timestamp())))
         else:
-            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE time >= ? AND time < ? AND author_id LIKE (?)".format(self.summary["Server ID"], self.summary["Channel ID"]),
+            cursor.execute("SELECT COUNT(*) FROM 'log_{}-{}' WHERE timestamp >= ? AND timestamp < ? AND author_id LIKE (?)".format(self.summary["Server ID"], self.summary["Channel ID"]),
                            (int(day_begin.timestamp()), int(day_end.timestamp()), user))
         return cursor.fetchone()[0]
         
@@ -143,8 +146,8 @@ class Plotify():
         # Generated Content | HMTL Path | Description
         self.plots["msgperday"] = (self.plot_msgperday("Plot-msg.html"), "Plot-msg.html", "Number of messages per day")
         self.plots["msgcumul"] = (self.plot_msgcumul("Plot-msgcumul.html"), "Plot-msgcumul.html", "Number of cumulatives messages")
-        #self.plots["top10"] = (self.plot_usertopx(10, "Plot-top10.html"), "Plot-top10.html", "Number of cumulatives messages for the Top 10 users")
-        #self.plots["top20"] = (self.plot_usertopx(20, "Plot-top20.html"), "Plot-top20.html", "Number of cumulatives messages for the Top 20 users")
+        self.plots["top10"] = (self.plot_usertopx(10, "Plot-top10.html"), "Plot-top10.html", "Number of cumulatives messages for the Top 10 users")
+        self.plots["top20"] = (self.plot_usertopx(20, "Plot-top20.html"), "Plot-top20.html", "Number of cumulatives messages for the Top 20 users")
 
 #        self.stats["top10perday"] = (self.top10_per_day("Stats-top10perday.html"), "Stats-top10perday.html", "Standings history")
 
@@ -154,6 +157,7 @@ class Plotify():
         # Open's encoding must be specified because Windows...
         with open(self.plots_dir + "index.html", "w", encoding='utf-8') as file:
             file.write(template_channel_page.render(html_render_date_string=datetime.now().strftime("%T the %F"),
+                                                    plots=self.plots,
                                                     summary=self.summary,
                                                     top10_yesterday=self.top10_yesterday_tuple))
 
@@ -194,29 +198,50 @@ class Plotify():
 
     def plot_usertopx(self, max_users, path):
         cursor = self.db.cursor()
-        cursor.execute("SELECT author_id FROM 'log_{}-{}';".format(self.summary["Server ID"], self.summary["Channel ID"]))
+        cursor.execute(
+            """
+            SELECT members.id,
+            CASE 
+                WHEN members.nick IS NOT NULL
+                    THEN members.nick
+                ELSE members.name
+            END as name, count(datetime) as count
+            FROM 'log_{server_id}-{channel_id}' msg_log 
+            INNER JOIN 'members_{server_id}' members on msg_log.author_id=members.id 
+            GROUP BY msg_log.author_id
+            ORDER BY count(msg_log.id) DESC;
+            """.format(server_id=self.summary["Server ID"], 
+                       channel_id=self.summary["Channel ID"])
+        )
+        # [(user_id, name, msg_count), ...]
 
-        top = Counter(elem[0] for elem in cursor.fetchall()).most_common(max_users)
-        top_users_ids = [elem[0] for elem in top]
-        users_line = []
-        for i, user_id in enumerate(top_users_ids):
-            print(i + 1)
-
-            # Get daily message count for each top user 
-            counts = [self.get_count_per_date(date, user=user_id) for date in self.date_array]
-            cumul = list(cumultative_sum(counts))
-
-            # Get nickname of a top user if it exist
-            cursor.execute("SELECT name, nick FROM members_{} WHERE id LIKE '{}';".format(self.summary["Server ID"], user_id))
-            user = cursor.fetchone()
-            if not user:
-                user = ("UNKNOWN ({})".format(user_id), None)
+        top_x = [elem for elem in cursor.fetchmany(max_users)]
+        user_lines = []
+        for (user_id, name, _) in top_x:
+            cursor.execute(
+                """
+                SELECT substr(datetime,0,11), count(id)
+                FROM 'log_{server_id}-{channel_id}'
+                WHERE author_id LIKE '{user_id}'
+                GROUP BY substr(datetime,0,11);
+                """.format(server_id=self.summary["Server ID"], 
+                           channel_id=self.summary["Channel ID"],
+                           user_id=user_id)
+            )
+            # [(date, count), ...]
+            count = dict([(date, 0) for date in self.date_array])
+            count.update(dict(cursor.fetchall()))
+            today_date = datetime.today().date().strftime("%Y-%m-%d")
+            if today_date in count:
+                del count[today_date]
+            cumul = list(cumultative_sum([count[date] for date in count]))
 
             line = go.Scatter(x=self.date_array,
                               y=cumul,
-                              name=user[1] if user[1] else user[0])
-            users_line.append(line)
-        return self.generate_plot({"data": users_line,
+                              name=name)
+            user_lines.append(line)
+        
+        return self.generate_plot({"data": user_lines,
                                    "layout": go.Layout(title="Number of cumulatives messages for the Top %d users in #%s (%s)" % (max_users, self.summary["Channel name"], self.summary["Server name"]))},
                                   self.plots_dir + path)
 
@@ -255,7 +280,7 @@ class Plotify():
         day_begin = yesterday + pytz.timezone(timezone).localize(yesterday).utcoffset()
         day_end = yesterday + pytz.timezone(timezone).localize(yesterday + timedelta(days=1)).utcoffset() + timedelta(days=1)
 
-        cursor.execute("SELECT author_id FROM 'log_{}-{}' WHERE time >= ? AND time < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
+        cursor.execute("SELECT author_id FROM 'log_{}-{}' WHERE timestamp >= ? AND timestamp < ?".format(self.summary["Server ID"], self.summary["Channel ID"]),
                        (int(day_begin.timestamp()), int(day_end.timestamp())))
 
         top = Counter(elem[0] for elem in cursor.fetchall()).most_common(10)

@@ -1,26 +1,14 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
-    <link rel="stylesheet" href="css/own.css">
-    <title>DiscoLog Monitoring Index</title>
-  </head>
-  <body>
-    <h1 class="page-header">
-      <b>"DiscoLog Monitoring Index"</b>
-    </h1>
-    <div class="container">
-      <h2>Server List:</h2>
-      <ul style="list-style-type:none">
-        {% for id_server, server in server_channel_dict.items() %}
-          <li><h4><a href={{ id_server }}>
-            {{ server["Server name"] }}
-          </a></h4></li>
-        {% endfor %}
-      </ul>
-    </div>
-  </body>
-</html>
+{% extends "base.html.j2" %}
+
+{% block content %}
+  <div class="container">
+    <h2>Server List:</h2>
+    <ul style="list-style-type:none">
+      {% for id_server, server in server_channel_dict.items() %}
+        <li><h4><a href={{ id_server }}>
+          {{ server["Server name"] }}
+        </a></h4></li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

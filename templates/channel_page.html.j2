@@ -1,57 +1,41 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
-    <link rel="stylesheet" href="../../css/own.css">
-    <title>DiscoLog Monitoring for {{ summary["Server name"] }} (#{{ summary["Channel name"] }})</title>
-  </head>
-  <body>
-    <h1 class="page-header">
-      DiscoLog Monitoring for {{ summary["Server name"] }} (#{{ summary["Channel name"] }})
-    </h1>
-    <div class="container">
-      <h3 class="sub-header">
-        Standings of yesterday
-      </h3>
-      <table class="table table-sm">
-        <thead>
+{% extends "base.html" %}
+
+{% block content %}
+  <h1 class="page-header">
+    DiscoLog Monitoring for {{ summary["Server name"] }} (#{{ summary["Channel name"] }})
+  </h1>
+  <div class="container">
+    <h3 class="sub-header">
+      Standings of yesterday
+    </h3>
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Messages count</th>
+          <th>Nickname</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for elem in top10_yesterday %}
           <tr>
-            <th>#</th>
-            <th>Messages count</th>
-            <th>Nickname</th>
+            <td>{{ loop.index }}.</td>
+            <td>{{ elem[0] }}</td>
+            <td>{{ elem[1] }}</td>
           </tr>
-        </thead>
-        <tbody>
-          {% for elem in top10_yesterday %}
-            <tr>
-              <td>{{ loop.index }}.</td>
-              <td>{{ elem[0] }}</td>
-              <td>{{ elem[1] }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <h3>Graphs</h3>
-      <ul style="list-style-type:none">
-        {% for plot_name in plots %}
-          <li>
-            <a href="{{ plots[plot_name][1] }}">{{ plots[plot_name][2] }}</a>
-          </li>
         {% endfor %}
-      </ul>
-    </div>
-    <footer class="footer">
-      <div class="container">
-        <span class="text-muted">
-          Page generated at {{ html_render_date_string }} by DiscoLog (DasFranck#1168)
-        </span>
-      </div>
-    </footer>
-  </body>
-</html>
+      </tbody>
+    </table>
+    <h3>Graphs</h3>
+    <ul style="list-style-type:none">
+      {% for plot_name in plots %}
+        <li>
+          <a href="{{ plots[plot_name][1] }}">{{ plots[plot_name][2] }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}
 
 <!--
                   # Stats

@@ -1,12 +1,13 @@
 from peewee import (Model, SqliteDatabase, 
                     IntegerField, CharField, 
-                    ForeignKeyField, TextField)
+                    ForeignKeyField, TextField,
+                    BooleanField, CompositeKey)
 
-db = SqliteDatabase('database.db')
+database = SqliteDatabase('database.db')
 
 class BaseModel(Model):
     class Meta:
-        database = db
+        database = database
 
 
 class Server(BaseModel):
@@ -23,8 +24,19 @@ class Channel(BaseModel):
 class Member(BaseModel):
     id = IntegerField(unique=True, primary_key=True)
     name = CharField() 
-    nick = CharField()
     discriminator = CharField(4)
+
+
+class Nick(BaseModel):
+    member_id = ForeignKeyField(Member)
+    server_id = ForeignKeyField(Server)
+    nick = CharField()
+
+    class Meta:
+        indexes = (
+            (('member_id', 'server_id'), True),
+        )
+        primary_key = CompositeKey('member_id', 'server_id')
 
 
 class Message(BaseModel):

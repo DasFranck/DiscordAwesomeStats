@@ -41,7 +41,6 @@ class Nick(BaseModel):
 
 class Message(BaseModel):
     id = IntegerField(unique=True, primary_key=True)
-    server_id = ForeignKeyField(Server, backref='messages')
     channel_id = ForeignKeyField(Channel, backref='messages')
     author_id = ForeignKeyField(Member, backref='messages')
     timestamp = IntegerField()

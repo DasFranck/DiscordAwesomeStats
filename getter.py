@@ -9,6 +9,7 @@ import sys
 import time
 
 import discord
+from peewee import fn
 import pytz
 import yaml
 
@@ -93,52 +94,34 @@ class LogGetter(discord.Client):
         """
         print("\t{} ({})".format(channel.name, channel.id))
 
-        cursor = self.database.cursor()
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS 'log_%s-%s'(
-                id INTEGER PRIMARY KEY ON CONFLICT REPLACE UNIQUE,
-                author_id INT,
-                timestamp INTEGER,
-                datetime TEXT,
-                content TEXT
-            )
-            """ % (str(cfg["id"]), channel.id)
-        )
+        self.database.connect()
+        self.database.create_tables([Message])
 
         try:
-            cursor.execute("select MAX(timestamp) from 'log_%s-%s';" % (str(cfg["id"]), channel.id))
-            last_message_timestamp = cursor.fetchone()[0]
+            last_message_timestamp = Message.select(fn.MAX(Message.timestamp))[0].timestamp
             assert last_message_timestamp > 1431468000
             last_message_datetime = datetime.fromtimestamp(last_message_timestamp - 10)
         except:
             last_message_datetime = None
 
-        log_buffer = []
+        message_fields = [Message.id, channel.id]
         async for item in self.logs_from(channel, limit=sys.maxsize, after=last_message_datetime):
-            log_buffer.append((
+            message_data = []
+            message_data.append((
                 item.id,
+                channel.id,
                 item.author.id,
                 int(time.mktime(item.timestamp.timetuple())),
-                (item.timestamp + pytz.timezone(timezone).localize(item.timestamp).utcoffset()).strftime("%F %T"),
-                item.content
             ))
-            if len(log_buffer) % 1000 == 0:
-                print("\t\t%d" % len(log_buffer))
+            if len(message_data) % 200 == 0:
+                print("\t\t%d" % len(message_data))
+                (Message.insert_many(message_data, fields=message_fields)).on_conflict_replace().execute()
+                message_data = []
 
-        cursor.executemany(
-            """
-            INSERT INTO 'log_%s-%s'(
-                id, author_id, timestamp, datetime, content
-            )
-            VALUES(?, ?, ?, ?, ?)
-            """ % (str(cfg["id"]), channel.id),
-            log_buffer
-        )
-        self.database.commit()
+        self.database.close()
 
-        cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
-        msg_count = cursor.fetchone()[0]
+       # cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
+       # msg_count = cursor.fetchone()[0]
 
     async def get_server_messages(self):
         """
@@ -162,7 +145,6 @@ class LogGetter(discord.Client):
                     channel.id in [str(i["id"]) for i in config_server["channels"]])):
                     # Catch error if the bot have access to this channel
                     try:
-                        continue
                         await self.get_logs_from_channel(channel, config_server, self.config['timezone'])
                     except discord.errors.Forbidden:
                         pass

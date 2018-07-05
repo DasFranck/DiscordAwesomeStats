@@ -2,3 +2,4 @@ pyaml
 discord.py
 plotly
 jinja2
+peewee

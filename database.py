@@ -48,12 +48,11 @@ class Message(BaseModel):
 
 class Message_count(BaseModel):
     author_id = ForeignKeyField(Member)
-    server_id = ForeignKeyField(Server)
     channel_id = ForeignKeyField(Channel)
     date = CharField()
     count = IntegerField()
 
     class Meta:
         indexes = (
-            (('author_id', 'server_id', 'channel_id', 'date'), True),
+            (('author_id', 'server_id', 'date'), True),
         )

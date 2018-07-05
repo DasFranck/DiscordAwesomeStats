@@ -45,7 +45,6 @@ class LogGetter(discord.Client):
         """
         Get every members from the server provided and write it to the database.
         """
-        self.database.connect()
         self.database.create_tables([Server, Channel, Member, Nick])
 
         nick_data = []
@@ -78,15 +77,16 @@ class LogGetter(discord.Client):
         members_fields = [Member.id, Member.name, Member.discriminator]
         nick_fields = [Nick.member_id, Nick.server_id, Nick.nick]
 
+        print(server.name)
+        print(server.id)
+        print(server.icon)
+
         (Server.insert(id=server.id, name=server.name)).on_conflict_replace().execute()
         (Channel.insert_many(channels_data, fields=channel_fields)).on_conflict_replace().execute()
-        print(len(members_data))
         for idx in range(0, len(members_data), 300):
             (Member.insert_many(members_data[idx:idx+300], fields=members_fields)).on_conflict_replace().execute()
         for idx in range(0, len(nick_data), 300):
             (Nick.insert_many(nick_data[idx:idx+300], fields=nick_fields)).on_conflict_replace().execute()
-
-        self.database.close()
 
     async def get_logs_from_channel(self, channel, cfg, timezone='UTC'):
         """
@@ -94,7 +94,6 @@ class LogGetter(discord.Client):
         """
         print("\t{} ({})".format(channel.name, channel.id))
 
-        self.database.connect()
         self.database.create_tables([Message])
 
         try:
@@ -104,9 +103,10 @@ class LogGetter(discord.Client):
         except:
             last_message_datetime = None
 
-        message_fields = [Message.id, channel.id]
+        message_fields = [Message.id, Message.channel_id, Message.author_id, Message.timestamp]
+        message_data = []
+        message_count = 0
         async for item in self.logs_from(channel, limit=sys.maxsize, after=last_message_datetime):
-            message_data = []
             message_data.append((
                 item.id,
                 channel.id,
@@ -114,11 +114,10 @@ class LogGetter(discord.Client):
                 int(time.mktime(item.timestamp.timetuple())),
             ))
             if len(message_data) % 200 == 0:
-                print("\t\t%d" % len(message_data))
+                message_count += 200
+                print("\t\t%d" % message_count)
                 (Message.insert_many(message_data, fields=message_fields)).on_conflict_replace().execute()
                 message_data = []
-
-        self.database.close()
 
        # cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
        # msg_count = cursor.fetchone()[0]
@@ -131,6 +130,7 @@ class LogGetter(discord.Client):
 
         await self.change_presence(game=discord.Game(name="Getting logs..."))
 
+        self.database.connect()
         for config_server in self.config["servers"]:
             server = discord.utils.get(self.servers, id=str(config_server["id"]))
             if server is None:
@@ -149,6 +149,7 @@ class LogGetter(discord.Client):
                     except discord.errors.Forbidden:
                         pass
             print()
+        self.database.close()
         
         print("Done.")
         self.logger.logger.info("Done.")

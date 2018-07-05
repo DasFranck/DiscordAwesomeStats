@@ -77,10 +77,6 @@ class LogGetter(discord.Client):
         members_fields = [Member.id, Member.name, Member.discriminator]
         nick_fields = [Nick.member_id, Nick.server_id, Nick.nick]
 
-        print(server.name)
-        print(server.id)
-        print(server.icon)
-
         (Server.insert(id=server.id, name=server.name)).on_conflict_replace().execute()
         (Channel.insert_many(channels_data, fields=channel_fields)).on_conflict_replace().execute()
         for idx in range(0, len(members_data), 300):
@@ -97,7 +93,7 @@ class LogGetter(discord.Client):
         self.database.create_tables([Message])
 
         try:
-            last_message_timestamp = Message.select(fn.MAX(Message.timestamp))[0].timestamp
+            last_message_timestamp = Message.select(fn.MAX(Message.timestamp)).where(Message.channel_id == channel.id).scalar()
             assert last_message_timestamp > 1431468000
             last_message_datetime = datetime.fromtimestamp(last_message_timestamp - 10)
         except:
@@ -106,6 +102,7 @@ class LogGetter(discord.Client):
         message_fields = [Message.id, Message.channel_id, Message.author_id, Message.timestamp]
         message_data = []
         message_count = 0
+        print(last_message_datetime)
         async for item in self.logs_from(channel, limit=sys.maxsize, after=last_message_datetime):
             message_data.append((
                 item.id,
@@ -158,7 +155,7 @@ class LogGetter(discord.Client):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_file", "-c", default="./config.yaml", help="Path to the config file")
+    parser.add_argument("config_file", default="./config.yaml", help="Path to the config file")
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as file:

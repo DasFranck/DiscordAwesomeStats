@@ -102,7 +102,7 @@ class LogGetter(discord.Client):
         message_fields = [Message.id, Message.channel_id, Message.author_id, Message.timestamp]
         message_data = []
         message_count = 0
-        print(last_message_datetime)
+        print("\t\tLast message:",last_message_datetime)
         async for item in self.logs_from(channel, limit=sys.maxsize, after=last_message_datetime):
             message_data.append((
                 item.id,
@@ -115,6 +115,7 @@ class LogGetter(discord.Client):
                 print("\t\t%d" % message_count)
                 (Message.insert_many(message_data, fields=message_fields)).on_conflict_replace().execute()
                 message_data = []
+        print("\t\t%d" % (message_count + len(message_data)))
 
        # cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
        # msg_count = cursor.fetchone()[0]

@@ -45,7 +45,7 @@ class Message(BaseModel):
     author_id = ForeignKeyField(Member, backref='messages')
     timestamp = IntegerField()
 
-class Message_count_channel(BaseModel):
+class MessageCountChannel(BaseModel):
     channel_id = ForeignKeyField(Channel)
     date = CharField()
     count = IntegerField()
@@ -56,7 +56,7 @@ class Message_count_channel(BaseModel):
             (('channel_id', 'date'), True),
         )
 
-class Message_count_user(BaseModel):
+class MessageCountUser(BaseModel):
     author_id = ForeignKeyField(Member)
     channel_id = ForeignKeyField(Channel)
     date = CharField()

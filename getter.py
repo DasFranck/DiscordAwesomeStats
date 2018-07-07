@@ -10,25 +10,23 @@ import time
 
 import discord
 from peewee import fn
-import pytz
 import yaml
 
-from database import (Server, Channel, Member, Nick, Message, Message_count, database)
+from database import (Server, Channel, Member, Nick, Message, database)
 from classes import Logger
 
 
-class LogGetter(discord.Client):
+class Getter(discord.Client):
+    """
+    """
     def __init__(self, config):
         super().__init__()
         self.logger = Logger.Logger()
-
         self.config = config
+        self.database = database
+
         if 'timezone' not in self.config:
             self.config['timezone'] = 'UTC'
-
-        if not os.path.exists("data"):
-            os.makedirs("data")
-        self.database = database
 
     async def on_ready(self):
         """
@@ -38,12 +36,12 @@ class LogGetter(discord.Client):
         self.logger.logger.info("Sucessfully connected as %s (%s)" % (self.user.name, self.user.id))
         self.logger.logger.info("------------")
 
-        await self.get_server_messages()
+        await self.get_data()
         await self.logout()
 
     async def get_metadata_from_server(self, server, config_server):
         """
-        Get every members from the server provided and write it to the database.
+        Get every channels, members and their nick from the server provided and write them to the database.
         """
         self.database.create_tables([Server, Channel, Member, Nick])
 
@@ -84,9 +82,9 @@ class LogGetter(discord.Client):
         for idx in range(0, len(nick_data), 300):
             (Nick.insert_many(nick_data[idx:idx+300], fields=nick_fields)).on_conflict_replace().execute()
 
-    async def get_logs_from_channel(self, channel, cfg, timezone='UTC'):
+    async def get_messages_from_channel(self, channel, timezone):
         """
-        Get logs from channel and write it into the sqlite database (data/database.db)
+        Get messages from channel and write it into the sqlite database (data/database.db)
         """
         print("\t{} ({})".format(channel.name, channel.id))
 
@@ -94,15 +92,17 @@ class LogGetter(discord.Client):
 
         try:
             last_message_timestamp = Message.select(fn.MAX(Message.timestamp)).where(Message.channel_id == channel.id).scalar()
-            assert last_message_timestamp > 1431468000
+            assert last_message_timestamp and last_message_timestamp > 1431468000
+            print("\t\tLast message:",last_message_timestamp)
             last_message_datetime = datetime.fromtimestamp(last_message_timestamp - 10)
-        except:
+        except AssertionError:
             last_message_datetime = None
 
         message_fields = [Message.id, Message.channel_id, Message.author_id, Message.timestamp]
         message_data = []
         message_count = 0
         print("\t\tLast message:",last_message_datetime)
+        
         async for item in self.logs_from(channel, limit=sys.maxsize, after=last_message_datetime):
             message_data.append((
                 item.id,
@@ -115,17 +115,17 @@ class LogGetter(discord.Client):
                 print("\t\t%d" % message_count)
                 (Message.insert_many(message_data, fields=message_fields)).on_conflict_replace().execute()
                 message_data = []
-        print("\t\t%d" % (message_count + len(message_data)))
 
-       # cursor.execute("select count(*) from 'log_%s-%s'" % (str(cfg["id"]), channel.id))
-       # msg_count = cursor.fetchone()[0]
+        if len(message_data):
+            (Message.insert_many(message_data, fields=message_fields)).on_conflict_replace().execute()
+            print("\t\t%d" % (message_count + len(message_data)))
 
-    async def get_server_messages(self):
+    async def get_data(self):
         """
-        Get server messages by calling self.get_logs_from_channel on every marked chanel.
+        Get:
+        - Servers, channels, users and their nickname by calling self.get_metadata_from_server on each.
+        - Messages by calling self.get_messages_from_channel on every marked chanel.
         """
-        self.summary = []
-
         await self.change_presence(game=discord.Game(name="Getting logs..."))
 
         self.database.connect()
@@ -143,8 +143,9 @@ class LogGetter(discord.Client):
                     channel.id in [str(i["id"]) for i in config_server["channels"]])):
                     # Catch error if the bot have access to this channel
                     try:
-                        await self.get_logs_from_channel(channel, config_server, self.config['timezone'])
+                        await self.get_messages_from_channel(channel, self.config['timezone'])
                     except discord.errors.Forbidden:
+                        print(f"\t\tACCESS FORBIDDEN")
                         pass
             print()
         self.database.close()
@@ -152,7 +153,6 @@ class LogGetter(discord.Client):
         print("Done.")
         self.logger.logger.info("Done.")
         self.logger.logger.info("#--------------END--------------#")
-        return self.summary
 
 def main():
     parser = argparse.ArgumentParser()
@@ -162,8 +162,8 @@ def main():
     with open(args.config_file, 'r') as file:
         config = yaml.load(file)
 
-    lg = LogGetter(config)
-    lg.run(config["token"])
+    gt = Getter(config)
+    gt.run(config["token"])
 
 if __name__ == '__main__':
     main()

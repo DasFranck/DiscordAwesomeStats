@@ -61,6 +61,7 @@ class MessageCountUser(BaseModel):
     channel_id = ForeignKeyField(Channel)
     date = CharField()
     count = IntegerField()
+    cumulative_count = IntegerField()
 
     class Meta:
         indexes = (

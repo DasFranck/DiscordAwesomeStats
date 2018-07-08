@@ -51,7 +51,7 @@ class MessageCountGenerator():
 
         Reset means to recalculate everything.
         """
-        print("\t\tGenerating message count per user... ", end='')
+        print("\t\tGenerating message count per user... ", end='', flush=True)
         self.database.create_tables([MessageCountUser])
 
         date_range = self.get_date_range(MessageCountUser, channel_id, reset)
@@ -69,7 +69,7 @@ class MessageCountGenerator():
 
         Reset means recalculate and overwrite everything.
         """
-        print("\t\tGenerating message count of this channel... ", end='')
+        print("\t\tGenerating message count of this channel... ", end='', flush=True)
         self.database.create_tables([MessageCountChannel])
 
         date_range = self.get_date_range(MessageCountChannel, channel_id, reset)

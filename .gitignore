@@ -109,7 +109,7 @@ myconfig*.yaml
 # Data and logs directories
 chat_logs/
 data/
-database.db
+database*.db
 plots/
 logs/
 

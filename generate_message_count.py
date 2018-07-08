@@ -40,8 +40,8 @@ class MessageCountGenerator():
             first_message_date = arrow.get(first_message_timestamp).to(self.config['timezone']).date()
             return period(first_message_date, today).range("days")
         else:
-            return period(last_count, today).range("days")
-
+            last_count_date = arrow.get(last_count).to(self.config["timezone"]).date()
+            return period(last_count_date, today).range("days")
 
 
     def generate_message_count_per_user_per_channel(self, channel_id, reset=False):
@@ -58,6 +58,10 @@ class MessageCountGenerator():
         if not date_range:
             print("skipped.")
             return
+
+        for date in date_range:
+            date_begin = arrow.get(date).to(self.config["timezone"]).replace(hour=0, minute=0, second=0).timestamp
+            date_end = arrow.get(date).to(self.config["timezone"]).replace(hour=23, minute=59, second=59).timestamp
 
         print("done.")
         pass
@@ -77,12 +81,28 @@ class MessageCountGenerator():
             print("skipped.")
             return
         
+        count_data = []
+        count_fields = [MessageCountChannel.channel_id, MessageCountChannel.date,
+                        MessageCountChannel.count, MessageCountChannel.cumulative_count]
+        cumulated_count = 0
         for date in date_range:
-            date_begin = 0
-            date_end = 0
-            (Message.select(fn.COUNT(Message.id))
-                    .where(Message.channel_id == channel_id & Message.timestamp >= date_begin & Message.timestamp <= date_end)
-                    .scalar())
+            date_begin = arrow.get(date).to(self.config["timezone"]).replace(hour=0, minute=0, second=0).timestamp
+            date_end = arrow.get(date).to(self.config["timezone"]).replace(hour=23, minute=59, second=59).timestamp
+            count = (Message.select()
+                            .where((Message.channel_id == channel_id) & 
+                                   (Message.timestamp >= date_begin) & 
+                                   (Message.timestamp <= date_end))
+                            .count())
+            cumulated_count += count
+            count_data.append((
+                channel_id,
+                date.to_date_string(),
+                count,
+                cumulated_count
+            ))
+
+        for idx in range(0, len(count_data), 300):
+            (MessageCountChannel.insert_many(count_data[idx:idx+300], fields=count_fields)).on_conflict_replace().execute()
         
         print("done.")
         pass

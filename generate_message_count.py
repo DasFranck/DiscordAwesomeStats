@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-from datetime import datetime
-import asyncio
 import argparse
-import os
-import sys
-import time
 
 import arrow
-import discord
 from peewee import fn
 from pendulum import period
 import yaml
 
-from database import (Server, Channel, Member, Message,
+from database import (Guild, Channel, Member, Message,
                       MessageCountChannel, MessageCountUser, database)
 from classes import Logger
 
@@ -32,7 +26,7 @@ class MessageCountGenerator():
                            .where(table.channel_id == channel_id)
                            .scalar())
         if reset or not last_count:
-            first_message_timestamp = (Message.select(fn.MIN(Message.timestamp))
+            first_message_timestamp = (Message.select(fn.MIN(Message.created_at))
                                               .where(Message.channel_id == channel_id)
                                               .scalar())
             if not first_message_timestamp:
@@ -90,8 +84,8 @@ class MessageCountGenerator():
             date_end = arrow.get(date).to(self.config["timezone"]).replace(hour=23, minute=59, second=59).timestamp
             count = (Message.select()
                             .where((Message.channel_id == channel_id) & 
-                                   (Message.timestamp >= date_begin) & 
-                                   (Message.timestamp <= date_end))
+                                   (Message.created_at >= date_begin) & 
+                                   (Message.created_at <= date_end))
                             .count())
             cumulated_count += count
             count_data.append((
@@ -110,13 +104,13 @@ class MessageCountGenerator():
     def run(self):
         self.database.connect()
 
-        for config_server in self.config["servers"]:
-            server = Server.get(Server.id == config_server["id"])
-            channels = Channel.select().where(Channel.server_id == config_server["id"])
-            print("{} ({})".format(server.name, server.id))
+        for config_guild in self.config["guilds"]:
+            guild = Guild.get(Guild.id == config_guild["id"])
+            channels = Channel.select().where(Channel.guild_id == config_guild["id"])
+            print("{} ({})".format(guild.name, guild.id))
             for channel in channels:
-                if ("channels" not in config_server or
-                    channel.id in [i["id"] for i in config_server["channels"]]):
+                if ("channels" not in config_guild or
+                    channel.id in [i["id"] for i in config_guild["channels"]]):
                         print("\t{} ({})".format(channel.name, channel.id))
                         self.generate_message_count_per_user_per_channel(channel.id, True)
                         self.generate_message_count_per_channel(channel.id, True)

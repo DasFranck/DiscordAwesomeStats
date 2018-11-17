@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
     <link rel="stylesheet" href="../css/own.css">
-    <title>Channel index for {{ server["Server name"] }}</title>
+    <title>Channel index for {{ guild["Guild name"] }}</title>
   </head>
   <body>
     <h1 class="page-header">
-      <b>Channel index for {{ server["Server name"] }}</b>
+      <b>Channel index for {{ guild["Guild name"] }}</b>
     </h1>
     <div class="container">
       <h2>Channel List:</h2>
       <ul style="list-style-type:none">
-        {% for channel in server["Channels"] %}
+        {% for channel in guild["Channels"] %}
           <li><h4><a href={{ channel["Channel ID"] }}>
             #{{ channel["Channel name"]}}
           </a></h4></li>

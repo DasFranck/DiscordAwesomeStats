@@ -2,11 +2,11 @@
 
 {% block content %}
   <div class="container">
-    <h2>Server List:</h2>
+    <h2>Guild List:</h2>
     <ul style="list-style-type:none">
-      {% for id_server, server in server_channel_dict.items() %}
-        <li><h4><a href={{ id_server }}>
-          {{ server["Server name"] }}
+      {% for id_guild, guild in guild_channel_dict.items() %}
+        <li><h4><a href={{ id_guild }}>
+          {{ guild["Guild name"] }}
         </a></h4></li>
       {% endfor %}
     </ul>

@@ -39,19 +39,19 @@ class Logger():
         if message.channel.is_private:
             self.logger.info(string + " in a Private Channel")
         else:
-            self.logger.info(string + " in #" + message.channel.name + " on " + message.server.name + " (%s)" % message.server.id)
+            self.logger.info(string + " in #" + message.channel.name + " on " + message.guild.name + " (%s)" % message.guild.id)
 
     def log_error_command(self, string, message):
         if message.channel.is_private:
             self.logger.error(string + " in a Private Channel")
         else:
-            self.logger.error(string + " in #" + message.channel.name + " on " + message.server.name + " (%s)" % message.server.id)
+            self.logger.error(string + " in #" + message.channel.name + " on " + message.guild.name + " (%s)" % message.guild.id)
 
     def log_warn_command(self, string, message):
         if message.channel.is_private:
             self.logger.warning(string + " in a Private Channel")
         else:
-            self.logger.warning(string + " in #" + message.channel.name + " on " + message.server.name + " (%s)" % message.server.id)
+            self.logger.warning(string + " in #" + message.channel.name + " on " + message.guild.name + " (%s)" % message.guild.id)
 
     def log_info_print(self, string):
         self.logger.info(string)

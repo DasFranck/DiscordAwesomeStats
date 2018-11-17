@@ -1,4 +1,4 @@
-discord.py==1.0.0a1590+g860d6a9
+git+git://github.com/Rapptz/discord.py@rewrite#egg=discord.py
 jinja2
 peewee
 pyaml

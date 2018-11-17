@@ -1,4 +1,4 @@
-pyaml
-discord.py
+discord.py==1.0.0a1590+g860d6a9
 jinja2
 peewee
+pyaml

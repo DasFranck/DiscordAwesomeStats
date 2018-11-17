@@ -80,7 +80,7 @@ class MessageCountGenerator():
         if not date_range:
             print("skipped.")
             return
-        
+
         count_data = []
         count_fields = [MessageCountChannel.channel_id, MessageCountChannel.date,
                         MessageCountChannel.count, MessageCountChannel.cumulative_count]
@@ -103,7 +103,7 @@ class MessageCountGenerator():
 
         for idx in range(0, len(count_data), 300):
             (MessageCountChannel.insert_many(count_data[idx:idx+300], fields=count_fields)).on_conflict_replace().execute()
-        
+
         print("done.")
         pass
 

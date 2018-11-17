@@ -10,7 +10,7 @@ class BaseModel(Model):
         database = database
 
 
-class Server(BaseModel):
+class Guild(BaseModel):
     id = IntegerField(unique=True, primary_key=True)
     name = CharField()
 
@@ -18,7 +18,7 @@ class Server(BaseModel):
 class Channel(BaseModel):
     id = IntegerField(unique=True, primary_key=True)
     name = CharField()
-    server = ForeignKeyField(Server)
+    guild = ForeignKeyField(Guild)
 
 
 class Member(BaseModel):
@@ -29,21 +29,21 @@ class Member(BaseModel):
 
 class Nick(BaseModel):
     member_id = ForeignKeyField(Member)
-    server_id = ForeignKeyField(Server)
+    guild_id = ForeignKeyField(Guild)
     nick = CharField()
 
     class Meta:
         indexes = (
-            (('member_id', 'server_id'), True),
+            (('member_id', 'guild_id'), True),
         )
-        primary_key = CompositeKey('member_id', 'server_id')
+        primary_key = CompositeKey('member_id', 'guild_id')
 
 
 class Message(BaseModel):
     id = IntegerField(unique=True, primary_key=True)
     channel_id = ForeignKeyField(Channel, backref='messages')
     author_id = ForeignKeyField(Member, backref='messages')
-    timestamp = IntegerField()
+    created_at = IntegerField()
 
 class MessageCountChannel(BaseModel):
     channel_id = ForeignKeyField(Channel)

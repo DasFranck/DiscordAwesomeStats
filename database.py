@@ -57,7 +57,7 @@ class MessageCountChannel(BaseModel):
             (('channel_id', 'date'), True),
         )
 
-class MessageCountUser(BaseModel):
+class MessageCountUserChannel(BaseModel):
     author_id = ForeignKeyField(Member)
     channel_id = ForeignKeyField(Channel)
     date = CharField()

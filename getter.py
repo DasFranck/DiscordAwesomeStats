@@ -2,10 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-import asyncio
 import argparse
-import os
-import sys
 import time
 
 import discord
@@ -124,7 +121,7 @@ class Getter(discord.Client):
         """
         Get:
         - Guilds, channels, users and their nickname by calling self.get_metadata_from_guild on each.
-        - Messages by calling self.get_messages_from_channel on every marked chanel.
+        - Messages by calling self.get_messages_from_channel on every marked channel.
         """
         await self.change_presence(activity=discord.Game(name="Getting logs..."))
 

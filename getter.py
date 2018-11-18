@@ -75,7 +75,7 @@ class Getter(discord.Client):
         members_fields = [Member.id, Member.name, Member.discriminator]
         nick_fields = [Nick.member_id, Nick.guild_id, Nick.nick]
 
-        (Guild.insert(id=guild.id, name=guild.name)).on_conflict_replace().execute()
+        (Guild.insert(id=guild.id, name=guild.name, members=','.join([str(member.id) for member in guild.members]))).on_conflict_replace().execute()
         (Channel.insert_many(channels_data, fields=channel_fields)).on_conflict_replace().execute()
         for idx in range(0, len(members_data), 300):
             (Member.insert_many(members_data[idx:idx+300], fields=members_fields)).on_conflict_replace().execute()

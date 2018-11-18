@@ -13,6 +13,7 @@ class BaseModel(Model):
 class Guild(BaseModel):
     id = IntegerField(unique=True, primary_key=True)
     name = CharField()
+    members = CharField()
 
 
 class Channel(BaseModel):

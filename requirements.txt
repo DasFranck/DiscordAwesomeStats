@@ -2,3 +2,9 @@ git+git://github.com/Rapptz/discord.py@rewrite#egg=discord.py
 jinja2
 peewee
 pyaml
+
+arrow
+peewee
+pendulum
+
+flask

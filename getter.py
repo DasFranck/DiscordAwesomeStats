@@ -137,7 +137,7 @@ class Getter(discord.Client):
             for channel in guild.channels:
                 if (isinstance(channel, discord.TextChannel) and
                     ("channels" not in config_guild or
-                    channel.id in [i["id"] for i in config_guild["channels"]])):
+                    channel.id in [channel for channel in config_guild["channels"]])):
                     # Catch error if the bot have access to this channel
                     try:
                         await self.get_messages_from_channel(channel, self.config['timezone'])

@@ -152,7 +152,7 @@ class MessageCountGenerator():
             print("{} ({})".format(guild.name, guild.id))
             for channel in channels:
                 if ("channels" not in config_guild or
-                    channel.id in [i["id"] for i in config_guild["channels"]]):
+                    channel.id in [i for i in config_guild["channels"]]):
                         print("\t{} ({})".format(channel.name, channel.id))
                         self.generate_message_count_per_user_per_channel(user_list, channel.id)
                         self.generate_message_count_per_channel(channel.id)

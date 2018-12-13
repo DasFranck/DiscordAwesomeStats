@@ -1,10 +1,17 @@
+#global
 git+git://github.com/Rapptz/discord.py@rewrite#egg=discord.py
-jinja2
 peewee
 pyaml
 
+# database.py
+
+# getter.py
+
+# generate_message_count
 arrow
-peewee
 pendulum
 
+# notifier.py
+
+# Webserver
 flask

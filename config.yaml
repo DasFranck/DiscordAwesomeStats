@@ -1,0 +1,9 @@
+discord_token: MjQ1NjUzNTU3ODcxNjQwNTg0.WCI8tA.-Sd6iTxG9QlwoAYUTCN5KwC3nn8
+guilds:
+  415603807741804555: #ConDeCrashTest
+    run_on_all_channels: true
+    quiet: false
+  210091942736953348: #Breaktime
+    channels:
+    - 210092031979159552 #discussion
+    quiet: true

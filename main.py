@@ -1,7 +1,8 @@
-from datetime import datetime
+import argparse
 import logging
 import sqlite3
 
+from datetime import datetime
 from typing import Dict, Any, List
 
 import discord
@@ -13,12 +14,12 @@ class DiscoLog(discord.Client):
     config: Dict[Any, Any]
     logger: logging.Logger
 
-    def __init__(self, *, loop=None, **options):
+    def __init__(self, config_path: str = "config.yaml", *, loop=None, **options):
         intents = discord.Intents.default()
         intents.members = True
         super().__init__(loop=loop, intents=intents, **options)
         self.setup_logger()
-        self.load_config()
+        self.load_config(config_path)
         self.init_db()
 
     def setup_logger(self) -> None:
@@ -30,8 +31,8 @@ class DiscoLog(discord.Client):
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
 
-    def load_config(self) -> None:
-        with open("config.yaml") as fd:
+    def load_config(self, config_path) -> None:
+        with open(config_path) as fd:
             self.config = yaml.load(fd, Loader=yaml.FullLoader)
 
     def init_db(self) -> None:
@@ -56,7 +57,6 @@ class DiscoLog(discord.Client):
         self.db_client.commit()
 
         async for member in guild.fetch_members(limit=None):
-            print(member.name)
             db_cursor.execute(f"INSERT OR REPLACE INTO member (member_id, member_name) VALUES (? , ?);", (member.id, member.name))
         self.db_client.commit()
         db_cursor.close()
@@ -124,7 +124,11 @@ class DiscoLog(discord.Client):
 
 
 def main():
-    disco = DiscoLog()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config_path")
+    args = parser.parse_args()
+
+    disco = DiscoLog(config_path=args.config_path)
     disco.run(disco.config["discord_token"])
 
 if __name__ == "__main__":

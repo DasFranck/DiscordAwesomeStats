@@ -1,9 +1,9 @@
-discord_token: MjQ1NjUzNTU3ODcxNjQwNTg0.WCI8tA.-Sd6iTxG9QlwoAYUTCN5KwC3nn8
+discord_token: INSERTTOKENHERE 
 guilds:
-  415603807741804555: #ConDeCrashTest
+  123456789754123456: 
     run_on_all_channels: true
     quiet: false
-  210091942736953348: #Breaktime
+  456654654564564461: 
     channels:
-    - 210092031979159552 #discussion
+    - 214145646545646556 
     quiet: true

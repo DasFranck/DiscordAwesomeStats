@@ -81,6 +81,19 @@ class DiscoLog(discord.Client):
                     channel_list.append(channel)
         return channel_list    
 
+    def get_latest_count_date(self, channel_id: str = "", user_id: str = ""):
+        db_cursor = self.db_client.cursor()
+        if channel_id and user_id:
+            result = db_cursor.execute("SELECT MAX(date) FROM daily_message_count WHERE channel_id IS ? AND user_id IS ?;", (channel_id, user_id)).fetchone()
+        elif channel_id:
+            result = db_cursor.execute("SELECT MAX(date) FROM daily_message_count WHERE channel_id IS ?;", (channel_id,)).fetchone()
+        elif user_id:
+            result = db_cursor.execute("SELECT MAX(date) FROM daily_message_count WHERE user_id IS ?;", (user_id,)).fetchone()
+        else:
+            result = db_cursor.execute("SELECT MAX(date) FROM daily_message_count;").fetchone()
+        db_cursor.close()
+        return result[0]
+
     async def process_messages(self, channel: discord.TextChannel, after=None, before=None, only_users: List[discord.User] = None, limit=None):
         metadata : Dict[datetime.date, Dict[discord.User, int]] = {}
         db_cursor = self.db_client.cursor()

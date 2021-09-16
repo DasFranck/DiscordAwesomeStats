@@ -132,8 +132,9 @@ class DiscoLog(discord.Client):
                 for channel in self.fetch_channels(guild, self.config["guilds"][guild.id]):
                     self.logger.info(f"  Running on Channel {channel.name} ({channel.id})")
                     await self.populate_channel_table(channel)
-                    if latest_count_date := self.get_latest_count_date(channel.id):
-                        await self.process_messages(channel, after=(datetime.fromisoformat(latest_count_date) - timedelta(days=1)) if latest_count_date else None)
+                    latest_count_date = self.get_latest_count_date(channel.id)
+                    print(latest_count_date)
+                    await self.process_messages(channel, after=(datetime.fromisoformat(latest_count_date) - timedelta(days=1)) if latest_count_date else None)
         await self.close()
 
 

@@ -2,7 +2,7 @@ import argparse
 import logging
 import sqlite3
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
 import discord

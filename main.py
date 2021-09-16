@@ -120,10 +120,9 @@ class DiscoLog(discord.Client):
 
 
         for date in metadata:
-            print(f"{date} ({sum(metadata[date].values())} msgs)")
+            self.logger.info(f"{date} ({sum(metadata[date].values())} msgs)")
             for user in sorted(metadata[date], key=metadata[date].get, reverse=True):
-                print(f"  {user.name} {metadata[date][user]}")
-
+                self.logger.info(f"  {user.name} {metadata[date][user]}")
 
     async def on_ready(self):
         for guild in self.guilds:
@@ -133,7 +132,9 @@ class DiscoLog(discord.Client):
                 for channel in self.fetch_channels(guild, self.config["guilds"][guild.id]):
                     self.logger.info(f"  Running on Channel {channel.name} ({channel.id})")
                     await self.populate_channel_table(channel)
-                    await self.process_messages(channel)
+                    lastest_count_date = self.get_latest_count_date(channel.id)
+                    print(lastest_count_date)
+                    await self.process_messages(channel, after=datetime.fromisoformat(lastest_count_date) - timedelta(days=1))
         await self.close()
 
 

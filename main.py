@@ -83,19 +83,19 @@ class DiscoLog(discord.Client):
 
     async def process_messages(self, channel: discord.TextChannel, after=None, before=None, only_users: List[discord.User] = None, limit=None):
         metadata : Dict[datetime.date, Dict[discord.User, int]] = {}
+        db_cursor = self.db_client.cursor()
         last_date = None
-        last_date_count = 0
-        total_count = 0
         async for message in channel.history(limit=limit, before=before, after=after, oldest_first=True):
             message_creation_date = message.created_at.astimezone(pytz.timezone("Europe/Paris")).date()
 
             if last_date and last_date != message_creation_date:
-                self.logger.info(f"{last_date} - {last_date_count}")
-                last_date_count = 0
+                if last_date in metadata:
+                    self.logger.info(f"    {last_date.strftime('%Y-%m-%d')} - #{channel.name} on {channel.guild.name} ({channel.id}@{channel.guild.id}) - {sum(metadata[last_date].values())}")
+                    for user in metadata[last_date]:
+                        db_cursor.execute("INSERT OR REPLACE INTO daily_message_count (date, channel_id, member_id, count) VALUES (?, ?, ?, ?);", (last_date.strftime("%Y-%m-%d"), channel.id, user.id, metadata[last_date][user]))
+                    self.db_client.commit()
 
             last_date = message_creation_date
-            last_date_count += 1
-            total_count += 1
 
             if message_creation_date not in metadata:
                 metadata[message_creation_date] = {}
@@ -103,6 +103,7 @@ class DiscoLog(discord.Client):
                 metadata[message_creation_date][message.author] = 1
             else:
                 metadata[message_creation_date][message.author] += 1
+        db_cursor.close()
 
 
         for date in metadata:

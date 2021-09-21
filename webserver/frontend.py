@@ -9,13 +9,17 @@ def get_guilds():
     with closing(get_db().cursor()) as cursor:
         return cursor.execute("SELECT * FROM guild;").fetchall()
 
-    guilds = cursor.execute("SELECT * FROM guild;").fetchall()
-    cursor.close()
-    return guilds
+def get_guild(guild_id: int):
+    with closing(get_db().cursor()) as cursor:
+        return cursor.execute("SELECT * FROM guild WHERE guild_id IS ?", (guild_id,)).fetchone()
+
+@frontend.context_processor
+def inject_guilds():
+    return dict(guild_list=get_guilds())
 
 @frontend.route('/')
 def index():
-    return render_template('index.html.j2', guilds=get_guilds())
+    return render_template('index.html.j2')
 
 @frontend.route("/stats")
 def stats():

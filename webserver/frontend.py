@@ -6,7 +6,8 @@ from .db import get_db
 frontend = Blueprint('frontend', __name__)
 
 def get_guilds():
-    cursor = get_db().cursor()
+    with closing(get_db().cursor()) as cursor:
+        return cursor.execute("SELECT * FROM guild;").fetchall()
 
     guilds = cursor.execute("SELECT * FROM guild;").fetchall()
     cursor.close()

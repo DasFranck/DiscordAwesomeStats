@@ -1,3 +1,5 @@
+from contextlib import closing
+
 from flask import Blueprint, render_template, flash, redirect, url_for
 from markupsafe import escape
 
@@ -31,7 +33,13 @@ def guild():
 
 @frontend.route("/guild/<int:guild_id>")
 def guild_id(guild_id: int):
-    return render_template('guild_id.html.j2')
+    with closing(get_db().cursor()) as cursor:
+        for channel_id in cursor.execute("SELECT channel_id FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()[0]:
+            message_count_per_date = cursor.execute("SELECT date, SUM(count), member_id FROM daily_message_count WHERE channel_id = ? GROUP BY date;", (channel_id,)).fetchall()
+
+    date_axis = [str(message_count[0]) for message_count in message_count_per_date]
+    count_axis = [message_count[1] for message_count in message_count_per_date]
+    return render_template('guild_id.html.j2', target_guild=get_guild(guild_id), date_axis=date_axis, count_axis=count_axis)
 
 @frontend.route("/user/")
 def user():

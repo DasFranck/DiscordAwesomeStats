@@ -1,3 +1,7 @@
+# fetcher
 discord.py
 pyyaml
 pytz
+
+# webserver
+flask

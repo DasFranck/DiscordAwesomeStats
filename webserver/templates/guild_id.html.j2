@@ -15,6 +15,7 @@ var myChart = new Chart(ctx, {
     data: {
         labels: {{ date_axis }},
         datasets: [{
+            responsive: true,
             label: '# of Message',
             data: {{ count_axis }},
             backgroundColor: [
@@ -23,13 +24,17 @@ var myChart = new Chart(ctx, {
             borderColor: [
                 'rgba(255, 99, 132, 1)',
             ],
-            borderWidth: 1
         }]
     },
     options: {
         scales: {
             y: {
                 beginAtZero: true
+            }
+        },
+        elements: {
+            point: {
+                radius: 0
             }
         }
     }

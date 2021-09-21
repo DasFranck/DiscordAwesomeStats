@@ -25,13 +25,13 @@ def guild():
     return ""
 
 @frontend.route("/guild/<int:guild_id>")
-def guild_id():
-    return ""
+def guild_id(guild_id: int):
+    return render_template('guild_id.html.j2')
 
 @frontend.route("/user/")
 def user():
     return ""
 
 @frontend.route("/user/<int:user_id>")
-def user_id():
+def user_id(user_id: int):
     return ""

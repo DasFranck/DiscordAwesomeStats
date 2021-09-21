@@ -42,7 +42,7 @@ class DiscoLog(discord.Client):
             """
             CREATE TABLE IF NOT EXISTS guild (guild_id INTEGER PRIMARY KEY, guild_name TEXT);
             CREATE TABLE IF NOT EXISTS channel (channel_id INTEGER PRIMARY KEY, guild_id INTEGER, channel_name TEXT, FOREIGN KEY (guild_id) REFERENCES guild (guild_id));
-            CREATE TABLE IF NOT EXISTS member (member_id INTEGER PRIMARY KEY, member_name TEXT);
+            CREATE TABLE IF NOT EXISTS member (member_id INTEGER PRIMARY KEY, member_name TEXT, discriminator INTEGER);
             CREATE TABLE IF NOT EXISTS daily_message_count (date DATE, channel_id INTEGER, member_id INTEGER, count INTEGER, 
                 FOREIGN KEY (channel_id) REFERENCES channel (channel_id),
                 FOREIGN KEY (member_id) REFERENCES member (member_id));
@@ -57,7 +57,7 @@ class DiscoLog(discord.Client):
         self.db_client.commit()
 
         async for member in guild.fetch_members(limit=None):
-            db_cursor.execute(f"INSERT OR REPLACE INTO member (member_id, member_name) VALUES (? , ?);", (member.id, member.name))
+            db_cursor.execute(f"INSERT OR REPLACE INTO member (member_id, member_name, discriminator) VALUES (? , ?, ?);", (member.id, member.name, member.discriminator))
         self.db_client.commit()
         db_cursor.close()
 

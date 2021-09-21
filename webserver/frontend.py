@@ -1,14 +1,16 @@
 from flask import Blueprint, render_template, flash, redirect, url_for
 from markupsafe import escape
 
+from .db import get_db
 
 frontend = Blueprint('frontend', __name__)
 
-
-
 def get_guilds():
-    pass
+    cursor = get_db().cursor()
 
+    guilds = cursor.execute("SELECT * FROM guild;").fetchall()
+    cursor.close()
+    return guilds
 
 @frontend.route('/')
 def index():

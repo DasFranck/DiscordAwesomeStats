@@ -13,11 +13,11 @@ var ctx = document.getElementById('myChart');
 var myChart = new Chart(ctx, {
     type: 'line',
     data: {
-        labels: {{ date_axis }},
+        labels: {{ message_count_per_date.keys() | list }},
         datasets: [{
             responsive: true,
             label: '# of Message',
-            data: {{ count_axis }},
+            data: {{ message_count_per_date.values() | list }},
             backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
             ],

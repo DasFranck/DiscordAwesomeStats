@@ -15,6 +15,12 @@ def get_channels(guild_id) -> List[Tuple[int, str]]:
     with closing(get_db().cursor()) as cursor:
         return [channel for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
 
+def get_member_active_channels_servers(member_id) -> Tuple[List[str], List[str]]:
+    with closing(get_db().cursor()) as cursor:
+        return {
+            [channel[0] for channel in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count WHERE member_id = ?;", (member_id,)).fetchall()],
+            [guild[0] for guild in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count LEFT JOIN guild ON channel_id = guild.guild_id WHERE member_id = ?;", (member_id,)).fetchall()]
+        }
 
 def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = 0, member_id: int = 0):
     message_count_per_date = {}
@@ -90,7 +96,10 @@ def user():
 
 @frontend.route("/user/<int:user_id>")
 def user_id(user_id: int):
-    return ""
+    return render_template(
+        'user_id.html.j2'
+    )
+
 
 @frontend.route("/channel/<int:channel_id>")
 def channel_id(channel_id: int):

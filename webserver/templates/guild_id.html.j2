@@ -6,6 +6,17 @@
 </div>
 <div class="container">
     <canvas id="myChart"></canvas>
+    <br>
+</div>
+<div class="container">
+<b>Total message count:</b> {{ message_count_per_date.values() | list | sum }}<br>
+<b>Busyest date:</b> {{busyest_date}} with {{message_count_per_date[busyest_date]}} messages<br>
+<b>Channels monitored:</b>
+<ul>
+{% for channel in channels %}
+    <li>#{{channel[1]}}</li>
+{% endfor %}
+<ul>
 </div>
 
 <script>

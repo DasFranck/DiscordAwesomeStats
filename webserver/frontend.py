@@ -1,10 +1,10 @@
+import time
 from contextlib import closing
 from typing import OrderedDict
 
 from datetime import date
-from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
-from flask import Blueprint, render_template, flash, redirect, url_for
+from flask import Blueprint, render_template, flash, redirect, url_for, g
 from markupsafe import escape
 
 from .db import get_db
@@ -18,6 +18,20 @@ def get_guilds():
 def get_guild(guild_id: int):
     with closing(get_db().cursor()) as cursor:
         return cursor.execute("SELECT * FROM guild WHERE guild_id IS ?", (guild_id,)).fetchone()
+
+@frontend.before_request
+def before_request():
+  g.start = time.time()
+
+@frontend.after_request
+def after_request(response):
+    diff = time.time() - g.start
+    if (response.response and
+        200 <= response.status_code < 300 and
+        response.content_type.startswith('text/html')):
+        response.set_data(response.get_data().replace(
+            b'__EXECUTION_TIME__', bytes(str(diff), 'utf-8')))
+    return response
 
 @frontend.context_processor
 def inject_guilds():

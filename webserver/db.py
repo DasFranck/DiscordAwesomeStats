@@ -5,6 +5,10 @@ from typing import List, Tuple
 
 from flask import g
 
+def get_member(member_id: int):
+    with closing(get_db().cursor()) as cursor:
+        return cursor.execute("SELECT * FROM member WHERE member_id IS ?", (member_id,)).fetchone()
+
 def get_guilds():
     with closing(get_db().cursor()) as cursor:
         return cursor.execute("SELECT * FROM guild;").fetchall()
@@ -13,11 +17,15 @@ def get_guild(guild_id: int):
     with closing(get_db().cursor()) as cursor:
         return cursor.execute("SELECT * FROM guild WHERE guild_id IS ?", (guild_id,)).fetchone()
 
-def get_channels(guild_id) -> List[Tuple[int, str]]:
+def get_channel(channel_id: int):
+    with closing(get_db().cursor()) as cursor:
+        return cursor.execute("SELECT * FROM channel WHERE channel_id IS ?", (channel_id,)).fetchone()
+
+def get_channels(guild_id: int) -> List[Tuple[int, str]]:
     with closing(get_db().cursor()) as cursor:
         return [channel for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
 
-def get_member_active_channels_servers(member_id) -> Tuple[List[str], List[str]]:
+def get_member_active_channels_servers(member_id: int) -> Tuple[List[str], List[str]]:
     with closing(get_db().cursor()) as cursor:
         return {
             [channel[0] for channel in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count WHERE member_id = ?;", (member_id,)).fetchall()],

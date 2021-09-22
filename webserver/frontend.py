@@ -48,8 +48,7 @@ def guild_id(guild_id: int):
                 else:
                     message_count_per_date[message_count_date] = count[1]
 
-    message_count_per_month = {month.strftime("%B %Y"): sum([message_count_per_date[date] for date in message_count_per_date if date.startswith(month.strftime("%Y-%m"))]) for month in rrule(MONTHLY, dtstart=date.fromisoformat(min(message_count_per_date.keys())), until=date.todate())}
-    print(message_count_per_month)
+    message_count_per_month = {month.strftime("%B %Y"): sum([message_count_per_date[date] for date in message_count_per_date if date.startswith(month.strftime("%Y-%m"))]) for month in rrule(MONTHLY, dtstart=date.fromisoformat(min(message_count_per_date.keys())), until=date.today())}
 
     return render_template(
         'guild_id.html.j2', 

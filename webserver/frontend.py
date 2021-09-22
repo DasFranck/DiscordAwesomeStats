@@ -70,6 +70,7 @@ def guild_id(guild_id: int):
         message_count_per_date=message_count_per_date,
         message_count_per_month=message_count_per_month,
         busyest_date=max(message_count_per_date, key=message_count_per_date.get),
+        busyest_month=max(message_count_per_month, key=message_count_per_month.get),
         channels=channels
     )
 

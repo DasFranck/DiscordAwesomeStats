@@ -69,10 +69,6 @@ def index():
 def stats():
     return ""
 
-@frontend.route("/guild/")
-def guild():
-    return ""
-
 @frontend.route("/guild/<int:guild_id>")
 def guild_id(guild_id: int):
     message_count_per_date = get_message_count_per_date(guild_id=guild_id)
@@ -94,4 +90,8 @@ def user():
 
 @frontend.route("/user/<int:user_id>")
 def user_id(user_id: int):
+    return ""
+
+@frontend.route("/channel/<int:channel_id>")
+def channel_id(channel_id: int):
     return ""

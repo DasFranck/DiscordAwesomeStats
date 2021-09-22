@@ -110,7 +110,12 @@ var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
                 text: "Message Count per Month"
             },
             tooltip: {
-                displayColors: false
+                displayColors: false,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + " messages";
+                    }
+                }
             }
         },
         interaction: {

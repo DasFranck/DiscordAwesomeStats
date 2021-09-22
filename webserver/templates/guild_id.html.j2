@@ -57,6 +57,14 @@ var dailyGuildChart = new Chart(dailyGuildChartctx, {
             title: {
                 display: true,
                 text: "Message Count per Day"
+            },
+            tooltip: {
+                displayColors: false,
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + " messages";
+                    }
+                }
             }
         },
         interaction: {
@@ -72,7 +80,6 @@ var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
         labels: {{ message_count_per_month.keys() | list }},
         datasets: [{
             responsive: true,
-            label: '# of Message',
             data: {{ message_count_per_month.values() | list }},
             backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
@@ -101,6 +108,9 @@ var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
             title: {
                 display: true,
                 text: "Message Count per Month"
+            },
+            tooltip: {
+                displayColors: false
             }
         },
         interaction: {

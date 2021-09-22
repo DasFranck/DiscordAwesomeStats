@@ -1,3 +1,5 @@
+import functools
+import operator
 import time
 from contextlib import closing
 
@@ -7,12 +9,12 @@ from typing import List, Tuple
 
 from flask import Blueprint, render_template, flash, redirect, url_for, g
 
-from .db import get_db, get_guild, get_guilds, get_member_active_channels_servers, get_channels
+from .db import get_db, get_guild, get_guilds, get_member_active_channels_guilds, get_channels, get_member
 
 frontend = Blueprint('frontend', __name__)
 
 
-def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = 0, member_id: int = 0):
+def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = [], member_id: int = 0):
     message_count_per_date = {}
     with closing(get_db().cursor()) as cursor:
         if guild_id and not channel_ids:
@@ -21,7 +23,7 @@ def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = 0, me
             #throw exception here
             pass
         for channel_id in channel_ids:
-            for count in cursor.execute("SELECT date, SUM(count), member_id FROM daily_message_count WHERE channel_id LIKE ? AND member_id LIKE ? GROUP BY date;", (channel_id if channel_id else "%", member_id if member_id else "%")).fetchall():
+            for count in cursor.execute("SELECT date, SUM(count), member_id FROM daily_message_count WHERE channel_id LIKE ? AND member_id LIKE ? GROUP BY date;", (channel_id if channel_id else "%", member_id if member_id  else "%")).fetchall():
                 message_count_date = str(count[0])
                 if message_count_date in message_count_per_date:
                     message_count_per_date[message_count_date] += count[1]
@@ -29,9 +31,9 @@ def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = 0, me
                     message_count_per_date[message_count_date] = count[1]
     return message_count_per_date
 
-def get_message_count_per_month(guild_id: int = 0, channel_id: int = 0, user_id: int = 0, message_count_per_date = None):
+def get_message_count_per_month(guild_id: int = 0, channel_ids: List[int] = [], member_id: int = 0, message_count_per_date = None):
     if not message_count_per_date:
-        message_count_per_date = get_message_count_per_date(guild_id, channel_id, user_id)
+        message_count_per_date = get_message_count_per_date(guild_id, channel_ids, member_id)
 
     return {
         month.strftime("%B %Y"): 
@@ -58,15 +60,15 @@ def inject_guilds():
     return dict(guild_list=get_guilds())
 
 @frontend.route('/')
-def index():
+def index_page():
     return render_template('index.html.j2')
 
 @frontend.route("/stats")
-def stats():
+def stats_page():
     return ""
 
 @frontend.route("/guild/<int:guild_id>")
-def guild_id(guild_id: int):
+def guild_id_page(guild_id: int):
     message_count_per_date = get_message_count_per_date(guild_id=guild_id)
     message_count_per_month = get_message_count_per_month(message_count_per_date=message_count_per_date)
 
@@ -80,17 +82,32 @@ def guild_id(guild_id: int):
         channels=get_channels(guild_id)
     )
 
-@frontend.route("/user/")
-def user():
+@frontend.route("/member/")
+def member_page():
     return ""
 
-@frontend.route("/user/<int:user_id>")
-def user_id(user_id: int):
+@frontend.route("/member/<int:member_id>")
+def member_id_page(member_id: int):
+    member_name = get_member(member_id=member_id)[0]
+    active_channels_guilds = get_member_active_channels_guilds(member_id)
+    message_count_per_date_dict = {
+        channel_id:
+            get_message_count_per_date(member_id=member_id, channel_ids=[channel_id]) for channel_id in functools.reduce(operator.iconcat, active_channels_guilds.values(), [])
+    }
+    message_count_per_month_dict = {
+        channel_id:
+            get_message_count_per_month(member_id=member_id, channel_ids=[channel_id]) for channel_id in functools.reduce(operator.iconcat, active_channels_guilds.values(), [])
+    }
+
     return render_template(
-        'user_id.html.j2'
+        'member_id.html.j2',
+        member_name=member_name,
+        active_channels_guilds=active_channels_guilds,
+        message_count_per_date_dict=message_count_per_date_dict,
+        message_count_per_month_dict=message_count_per_month_dict
     )
 
 
 @frontend.route("/channel/<int:channel_id>")
-def channel_id(channel_id: int):
+def channel_id_page(channel_id: int):
     return ""

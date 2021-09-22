@@ -1,7 +1,7 @@
 import sqlite3
 
 from contextlib import closing
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from flask import g
 
@@ -25,12 +25,12 @@ def get_channels(guild_id: int) -> List[Tuple[int, str]]:
     with closing(get_db().cursor()) as cursor:
         return [channel for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
 
-def get_member_active_channels_servers(member_id: int) -> Tuple[List[str], List[str]]:
+def get_member_active_channels_guilds(member_id: int) -> Dict[str, List[str]]:
+    member_active_channels = {}
     with closing(get_db().cursor()) as cursor:
-        return {
-            [channel[0] for channel in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count WHERE member_id = ?;", (member_id,)).fetchall()],
-            [guild[0] for guild in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count LEFT JOIN guild ON channel_id = guild.guild_id WHERE member_id = ?;", (member_id,)).fetchall()]
-        }
+        for guild in cursor.execute("SELECT channel.guild_id FROM daily_message_count LEFT JOIN channel ON daily_message_count.channel_id = channel.channel_id WHERE member_id = ? GROUP BY channel.guild_id;", (member_id,)).fetchall():
+            member_active_channels[guild[0]] = [channel[0] for channel in cursor.execute("SELECT daily_message_count.channel_id FROM daily_message_count JOIN channel on daily_message_count.channel_id = channel.channel_id WHERE member_id = ? AND guild_id = ? GROUP BY daily_message_count.channel_id;", (member_id, guild[0])).fetchall()]
+    return member_active_channels
 
 def get_db():
     if 'db' not in g:

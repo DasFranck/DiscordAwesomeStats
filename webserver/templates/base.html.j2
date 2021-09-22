@@ -26,9 +26,7 @@
                             Guilds
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/guild/">All guilds</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            {% for guild in guild_list %}
+                            {% for guild in guild_list | sort(attribute=1) %}
                             <li><a class="dropdown-item" href="/guild/{{ guild[0] }}">{{ guild[1] }}</a></li>
                             {% endfor %}
                         </ul>

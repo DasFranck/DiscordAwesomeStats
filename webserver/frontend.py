@@ -7,20 +7,10 @@ from typing import List, Tuple
 
 from flask import Blueprint, render_template, flash, redirect, url_for, g
 
-from .db import get_db, get_guild, get_guilds
+from .db import get_db, get_guild, get_guilds, get_member_active_channels_servers, get_channels
 
 frontend = Blueprint('frontend', __name__)
 
-def get_channels(guild_id) -> List[Tuple[int, str]]:
-    with closing(get_db().cursor()) as cursor:
-        return [channel for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
-
-def get_member_active_channels_servers(member_id) -> Tuple[List[str], List[str]]:
-    with closing(get_db().cursor()) as cursor:
-        return {
-            [channel[0] for channel in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count WHERE member_id = ?;", (member_id,)).fetchall()],
-            [guild[0] for guild in cursor.execute("SELECT DISTINCT channel_id FROM daily_message_count LEFT JOIN guild ON channel_id = guild.guild_id WHERE member_id = ?;", (member_id,)).fetchall()]
-        }
 
 def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = 0, member_id: int = 0):
     message_count_per_date = {}

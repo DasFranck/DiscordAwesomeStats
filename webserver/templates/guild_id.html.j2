@@ -5,21 +5,27 @@
     <h3 class="display-3">{{target_guild[1]}}</h3> 
 </div>
 <div class="container">
+    <h5 class="display-5">Stats</h5>
+    <b>Total message count:</b> {{ message_count_per_date.values() | list | sum }}<br>
+    <b>Busyest date:</b> {{busyest_date}} with {{message_count_per_date[busyest_date]}} messages<br>
+    <b>Busyest month:</b> {{busyest_month}} with {{message_count_per_month[busyest_month]}} messages<br>
+    <b>Channels monitored:</b>
+    <ul>
+    {% for channel in channels %}
+        <li><a href="/channel/{{channel[0]}}">#{{channel[1]}}</li></a>
+    {% endfor %}
+    </ul>
+    <br>
+</div>
+<div class="container">
+    <h5 class="display-5">Graphs</h5> 
     <canvas id="dailyGuildChart"></canvas>
     <br>
     <canvas id="monthlyGuildChart"></canvas>
     <br>
 </div>
 <div class="container">
-<b>Total message count:</b> {{ message_count_per_date.values() | list | sum }}<br>
-<b>Busyest date:</b> {{busyest_date}} with {{message_count_per_date[busyest_date]}} messages<br>
-<b>Busyest month:</b> {{busyest_month}} with {{message_count_per_month[busyest_month]}} messages<br>
-<b>Channels monitored:</b>
-<ul>
-{% for channel in channels %}
-    <li><a href="/channel/{{channel[0]}}">#{{channel[1]}}</li></a>
-{% endfor %}
-<ul>
+    <h5 class="display-5">Lists</h5> 
 </div>
 
 <script>

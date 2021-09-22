@@ -3,13 +3,45 @@ from contextlib import closing
 
 from datetime import date
 from dateutil.rrule import rrule, MONTHLY
+from typing import List, Tuple
+
 from flask import Blueprint, render_template, flash, redirect, url_for, g
-from markupsafe import escape
 
 from .db import get_db, get_guild, get_guilds
 
 frontend = Blueprint('frontend', __name__)
 
+def get_channels(guild_id) -> List[Tuple[int, str]]:
+    with closing(get_db().cursor()) as cursor:
+        return [channel for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
+
+
+def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = 0, member_id: int = 0):
+    message_count_per_date = {}
+    with closing(get_db().cursor()) as cursor:
+        if guild_id and not channel_ids:
+            channel_ids = [channel[0] for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
+        if not channel_ids:
+            #throw exception here
+            pass
+        for channel_id in channel_ids:
+            for count in cursor.execute("SELECT date, SUM(count), member_id FROM daily_message_count WHERE channel_id LIKE ? AND member_id LIKE ? GROUP BY date;", (channel_id if channel_id else "%", member_id if member_id else "%")).fetchall():
+                message_count_date = str(count[0])
+                if message_count_date in message_count_per_date:
+                    message_count_per_date[message_count_date] += count[1]
+                else:
+                    message_count_per_date[message_count_date] = count[1]
+    return message_count_per_date
+
+def get_message_count_per_month(guild_id: int = 0, channel_id: int = 0, user_id: int = 0, message_count_per_date = None):
+    if not message_count_per_date:
+        message_count_per_date = get_message_count_per_date(guild_id, channel_id, user_id)
+
+    return {
+        month.strftime("%B %Y"): 
+            sum([message_count_per_date[date] for date in message_count_per_date if date.startswith(month.strftime("%Y-%m"))]) 
+        for month in rrule(MONTHLY, dtstart=date.fromisoformat(min(message_count_per_date.keys())), until=date.today())
+    }
 
 @frontend.before_request
 def before_request():
@@ -43,18 +75,8 @@ def guild():
 
 @frontend.route("/guild/<int:guild_id>")
 def guild_id(guild_id: int):
-    message_count_per_date = {}
-    with closing(get_db().cursor()) as cursor:
-        channels = cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()
-        for channel in channels:
-            for count in cursor.execute("SELECT date, SUM(count), member_id FROM daily_message_count WHERE channel_id = ? GROUP BY date;", (channel[0],)).fetchall():
-                message_count_date = str(count[0])
-                if message_count_date in message_count_per_date:
-                    message_count_per_date[message_count_date] += count[1]
-                else:
-                    message_count_per_date[message_count_date] = count[1]
-
-    message_count_per_month = {month.strftime("%B %Y"): sum([message_count_per_date[date] for date in message_count_per_date if date.startswith(month.strftime("%Y-%m"))]) for month in rrule(MONTHLY, dtstart=date.fromisoformat(min(message_count_per_date.keys())), until=date.today())}
+    message_count_per_date = get_message_count_per_date(guild_id=guild_id)
+    message_count_per_month = get_message_count_per_month(message_count_per_date=message_count_per_date)
 
     return render_template(
         'guild_id.html.j2', 
@@ -63,7 +85,7 @@ def guild_id(guild_id: int):
         message_count_per_month=message_count_per_month,
         busyest_date=max(message_count_per_date, key=message_count_per_date.get),
         busyest_month=max(message_count_per_month, key=message_count_per_month.get),
-        channels=channels
+        channels=get_channels(guild_id)
     )
 
 @frontend.route("/user/")

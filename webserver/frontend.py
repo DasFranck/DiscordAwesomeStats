@@ -1,23 +1,15 @@
 import time
 from contextlib import closing
-from typing import OrderedDict
 
 from datetime import date
 from dateutil.rrule import rrule, MONTHLY
 from flask import Blueprint, render_template, flash, redirect, url_for, g
 from markupsafe import escape
 
-from .db import get_db
+from .db import get_db, get_guild, get_guilds
 
 frontend = Blueprint('frontend', __name__)
 
-def get_guilds():
-    with closing(get_db().cursor()) as cursor:
-        return cursor.execute("SELECT * FROM guild;").fetchall()
-
-def get_guild(guild_id: int):
-    with closing(get_db().cursor()) as cursor:
-        return cursor.execute("SELECT * FROM guild WHERE guild_id IS ?", (guild_id,)).fetchone()
 
 @frontend.before_request
 def before_request():

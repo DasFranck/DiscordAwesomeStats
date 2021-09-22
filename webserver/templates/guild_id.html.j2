@@ -5,7 +5,9 @@
     <h2>{{target_guild[1]}}</h2> 
 </div>
 <div class="container">
-    <canvas id="myChart"></canvas>
+    <canvas id="dailyGuildChart"></canvas>
+    <br>
+    <canvas id="monthlyGuildChart"></canvas>
     <br>
 </div>
 <div class="container">
@@ -14,20 +16,19 @@
 <b>Channels monitored:</b>
 <ul>
 {% for channel in channels %}
-    <li>#{{channel[1]}}</li>
+    <li><a href="/channel/{{channel[0]}}">#{{channel[1]}}</li></a>
 {% endfor %}
 <ul>
 </div>
 
 <script>
-var ctx = document.getElementById('myChart');
-var myChart = new Chart(ctx, {
+var dailyGuildChartctx = document.getElementById('dailyGuildChart');
+var dailyGuildChart = new Chart(dailyGuildChartctx, {
     type: 'line',
     data: {
         labels: {{ message_count_per_date.keys() | list }},
         datasets: [{
             responsive: true,
-            label: '# of Message',
             data: {{ message_count_per_date.values() | list }},
             backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
@@ -56,6 +57,50 @@ var myChart = new Chart(ctx, {
             title: {
                 display: true,
                 text: "Message Count per Day"
+            }
+        },
+        interaction: {
+            mode: "index",
+            intersect: false
+        }
+    }
+});
+var monthlyGuildChartctx = document.getElementById('monthlyGuildChart');
+var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
+    type: 'line',
+    data: {
+        labels: {{ message_count_per_month.keys() | list }},
+        datasets: [{
+            responsive: true,
+            label: '# of Message',
+            data: {{ message_count_per_month.values() | list }},
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+            ],
+            tension: 0.4
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        elements: {
+            point: {
+                radius: 0.1
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: "Message Count per Month"
             }
         },
         interaction: {

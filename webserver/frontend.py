@@ -100,12 +100,12 @@ def member_id_page(member_id: int):
     member_name = get_member(member_id=member_id)[0]
     active_channels_guilds = get_member_active_channels_guilds(member_id)
     message_count_per_date_dict = {
-        channel_id:
-            get_message_count_per_date(member_id=member_id, channel_ids=[channel_id]) for channel_id in functools.reduce(operator.iconcat, active_channels_guilds.values(), [])
+        channel[0]:
+            get_message_count_per_date(member_id=member_id, channel_ids=[channel[0]]) for channel in functools.reduce(operator.iconcat, active_channels_guilds.values(), [])
     }
     message_count_per_month_dict = {
-        channel_id:
-            get_message_count_per_month(member_id=member_id, channel_ids=[channel_id]) for channel_id in functools.reduce(operator.iconcat, active_channels_guilds.values(), [])
+        channel[0]:
+            get_message_count_per_month(member_id=member_id, channel_ids=[channel[0]]) for channel in functools.reduce(operator.iconcat, active_channels_guilds.values(), [])
     }
 
     return render_template(

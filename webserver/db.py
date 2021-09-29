@@ -20,7 +20,7 @@ def get_guild(guild_id: int):
 def get_guild_members(guild_id: int) -> List[Tuple[int, int]]:
     with closing(get_db().cursor()) as cursor:
         return cursor.execute("""
-            SELECT member.member_id, member.member_name 
+            SELECT member.member_id, member.member_name, member.discriminator
             FROM daily_message_count 
             JOIN channel ON daily_message_count.channel_id IS channel.channel_id
             JOIN member ON daily_message_count.member_id IS member.member_id

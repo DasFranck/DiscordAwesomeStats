@@ -6,7 +6,7 @@
 </div>
 {% for guild in active_channels_guilds.keys() %}
 <div class="d-flex justify-content-center">
-    <h2 class="display-2">{{guild[1]}}</h2> 
+    <h2 class="display-3">{{guild[1]}}</h2> 
 </div>
     {% for channel in active_channels_guilds[guild] %}
         {% set message_count_per_date = message_count_per_date_dict[channel[0]] %}

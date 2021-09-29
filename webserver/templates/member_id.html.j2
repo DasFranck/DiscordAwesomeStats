@@ -1,22 +1,22 @@
 {% extends "graph_pages.html.j2" %}
 
 {% block content %}
-{% for guild_id in active_channels_guilds.keys() %}
+{% for guild in active_channels_guilds.keys() %}
 <div class="d-flex justify-content-center">
-    <h3 class="display-3">{{guild_id}}</h3> 
+    <h3 class="display-3">{{guild[1]}}</h3> 
 </div>
-{% for channel_id in active_channels_guilds[guild_id] %}
-{% set message_count_per_date = message_count_per_date_dict[channel_id] %}
-{% set message_count_per_month = message_count_per_month_dict[channel_id] %}
+    {% for channel in active_channels_guilds[guild] %}
+        {% set message_count_per_date = message_count_per_date_dict[channel[0]] %}
+        {% set message_count_per_month = message_count_per_month_dict[channel[0]] %}
 <div class="container">
-    <canvas id="dailyGuildChart-{{channel_id}}"></canvas>
+    <canvas id="dailyGuildChart-{{channel[0]}}"></canvas>
     <br>
-    <canvas id="monthlyGuildChart-{{channel_id}}"></canvas>
+    <canvas id="monthlyGuildChart-{{channel[0]}}"></canvas>
     <br>
 </div>
 
 <script>
-var dailyGuildChartctx = document.getElementById('dailyGuildChart-{{channel_id}}');
+var dailyGuildChartctx = document.getElementById('dailyGuildChart-{{channel[0]}}');
 var dailyGuildChart = new Chart(dailyGuildChartctx, {
     type: 'line',
     data: {
@@ -120,6 +120,6 @@ var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
 });
 </script>
 <br>
-{% endfor %}
+    {% endfor %}
 {% endfor %}
 {% endblock content %}

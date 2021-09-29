@@ -110,7 +110,7 @@ def member_id_page(member_id: int):
 
     return render_template(
         'member_id.html.j2',
-        member_name=member[0],
+        member_name=member[1],
         member_discriminator=member[2],
         active_channels_guilds=active_channels_guilds,
         message_count_per_date_dict=message_count_per_date_dict,

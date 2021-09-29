@@ -50,7 +50,7 @@ var dailyGuildChart = new Chart(dailyGuildChartctx, {
             },
             title: {
                 display: true,
-                text: "Message Count per Day on {{channel_id}}"
+                text: "Message Count per Day on {{channel[1]}}"
             },
             tooltip: {
                 displayColors: false,
@@ -67,7 +67,7 @@ var dailyGuildChart = new Chart(dailyGuildChartctx, {
         }
     }
 });
-var monthlyGuildChartctx = document.getElementById('monthlyGuildChart-{{channel_id}}');
+var monthlyGuildChartctx = document.getElementById('monthlyGuildChart-{{channel[0]}}');
 var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
     type: 'line',
     data: {
@@ -101,7 +101,7 @@ var monthlyGuildChart = new Chart(monthlyGuildChartctx, {
             },
             title: {
                 display: true,
-                text: "Message Count per Month on {{channel_id}}"
+                text: "Message Count per Month on {{channel[1]}}"
             },
             tooltip: {
                 displayColors: false,

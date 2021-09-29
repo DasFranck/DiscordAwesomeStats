@@ -97,7 +97,7 @@ def member_page():
 
 @frontend.route("/member/<int:member_id>")
 def member_id_page(member_id: int):
-    member_name = get_member(member_id=member_id)[0]
+    member = get_member(member_id=member_id)
     active_channels_guilds = get_member_active_channels_guilds(member_id)
     message_count_per_date_dict = {
         channel[0]:
@@ -110,7 +110,8 @@ def member_id_page(member_id: int):
 
     return render_template(
         'member_id.html.j2',
-        member_name=member_name,
+        member_name=member[0],
+        member_discriminator=member[2],
         active_channels_guilds=active_channels_guilds,
         message_count_per_date_dict=message_count_per_date_dict,
         message_count_per_month_dict=message_count_per_month_dict

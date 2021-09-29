@@ -1,6 +1,9 @@
 {% extends "graph_pages.html.j2" %}
 
 {% block content %}
+<div class="d-flex justify-content-center">
+    <h2 class="display-2">{{member_name}}#{{member_discriminator}}</h3> 
+</div>
 {% for guild in active_channels_guilds.keys() %}
 <div class="d-flex justify-content-center">
     <h3 class="display-3">{{guild[1]}}</h3> 

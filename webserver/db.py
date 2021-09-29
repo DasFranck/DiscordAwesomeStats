@@ -36,18 +36,18 @@ def get_channels(guild_id: int) -> List[Tuple[int, str]]:
     with closing(get_db().cursor()) as cursor:
         return [channel for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
 
-def get_member_active_channels_guilds(member_id: int) -> Dict[str, List[str]]:
+def get_member_active_channels_guilds(member_id: int) -> Dict[Tuple[str, str], List[Tuple[str, str]]]:
     member_active_channels = {}
     with closing(get_db().cursor()) as cursor:
         for guild in cursor.execute("""
-            SELECT channel.guild_id
+            SELECT channel.guild_id, channel.guild_name
             FROM daily_message_count
             LEFT JOIN channel ON daily_message_count.channel_id = channel.channel_id
             WHERE member_id = ?
             GROUP BY channel.guild_id;
             """, (member_id,)).fetchall():
             member_active_channels[guild[0]] = [channel[0] for channel in cursor.execute("""
-                SELECT daily_message_count.channel_id
+                SELECT daily_message_count.channel_id, channel.channel_name
                 FROM daily_message_count
                 JOIN channel ON daily_message_count.channel_id = channel.channel_id
                 WHERE member_id = ? AND guild_id = ?

@@ -47,7 +47,7 @@ def get_member_active_channels_guilds(member_id: int) -> Dict[Tuple[str, str], L
             WHERE member_id = ?
             GROUP BY channel.guild_id;
             """, (member_id,)).fetchall():
-            member_active_channels[guild[0]] = [channel[0] for channel in cursor.execute("""
+            member_active_channels[guild] = [channel for channel in cursor.execute("""
                 SELECT daily_message_count.channel_id, channel.channel_name
                 FROM daily_message_count
                 JOIN channel ON daily_message_count.channel_id = channel.channel_id

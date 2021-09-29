@@ -25,10 +25,10 @@
     <br>
 </div>
 <div class="container">
-    <h5 class="display-5">Lists</h5> 
+    <h5 class="display-5">Member list</h5> 
     <ul>
-    {% for member in member_list | sort(attribute=3) %}
-        <li><a href="/member/{{member[0]}}">{{member[1]}}#{{'%04d' % member[2]}}: {{member[3]}} messages</li></a>
+    {% for member in member_list | sort(attribute=3, reverse=True) %}
+        <li><a href="/member/{{member[0]}}">{{member[1]}}#{{'%04d' % member[2]}}</a>: {{member[3]}} messages</li>
     {% endfor %}
     </ul>
 </div>

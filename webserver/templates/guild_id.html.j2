@@ -28,7 +28,7 @@
     <h5 class="display-5">Lists</h5> 
     <ul>
     {% for member in member_list %}
-        <li><a href="/member/{{member[0]}}">{{member[1]}}#{{member[2]}}</li></a>
+        <li><a href="/member/{{member[0]}}">{{member[1]}}#{{'%04d' % member[2]}}</li></a>
     {% endfor %}
     </ul>
 </div>

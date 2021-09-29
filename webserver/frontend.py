@@ -18,12 +18,20 @@ def get_message_count_per_date(guild_id: int = 0, channel_ids: List[int] = [], m
     message_count_per_date = {}
     with closing(get_db().cursor()) as cursor:
         if guild_id and not channel_ids:
-            channel_ids = [channel[0] for channel in cursor.execute("SELECT channel_id, channel_name FROM channel WHERE guild_id = ?", (guild_id,)).fetchall()]
+            channel_ids = [channel[0] for channel in cursor.execute("""
+                SELECT channel_id, channel_name
+                FROM channel
+                WHERE guild_id = ?
+                """, (guild_id,)).fetchall()]
         if not channel_ids:
             #throw exception here
             pass
         for channel_id in channel_ids:
-            for count in cursor.execute("SELECT date, SUM(count), member_id FROM daily_message_count WHERE channel_id LIKE ? AND member_id LIKE ? GROUP BY date;", (channel_id if channel_id else "%", member_id if member_id  else "%")).fetchall():
+            for count in cursor.execute("""
+                SELECT date, SUM(count), member_id
+                FROM daily_message_count
+                WHERE channel_id LIKE ? AND member_id LIKE ? GROUP BY date;
+                """, (channel_id if channel_id else "%", member_id if member_id else "%")).fetchall():
                 message_count_date = str(count[0])
                 if message_count_date in message_count_per_date:
                     message_count_per_date[message_count_date] += count[1]

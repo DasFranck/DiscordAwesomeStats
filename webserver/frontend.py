@@ -9,7 +9,7 @@ from typing import List, Tuple
 
 from flask import Blueprint, render_template, flash, redirect, url_for, g
 
-from .db import get_db, get_guild, get_guilds, get_member_active_channels_guilds, get_channels, get_member
+from .db import get_db, get_guild, get_guilds, get_member_active_channels_guilds, get_channels, get_member, get_guild_members
 
 frontend = Blueprint('frontend', __name__)
 
@@ -79,7 +79,8 @@ def guild_id_page(guild_id: int):
         message_count_per_month=message_count_per_month,
         busyest_date=max(message_count_per_date, key=message_count_per_date.get),
         busyest_month=max(message_count_per_month, key=message_count_per_month.get),
-        channels=get_channels(guild_id)
+        channels=get_channels(guild_id),
+        member_list=get_guild_members(guild_id)
     )
 
 @frontend.route("/member/")

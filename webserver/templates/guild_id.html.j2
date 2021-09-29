@@ -26,6 +26,11 @@
 </div>
 <div class="container">
     <h5 class="display-5">Lists</h5> 
+    <ul>
+    {% for member in member_list %}
+        <li><a href="/member/{{member[0]}}">#{{member[1]}}</li></a>
+    {% endfor %}
+    </ul>
 </div>
 
 <script>
